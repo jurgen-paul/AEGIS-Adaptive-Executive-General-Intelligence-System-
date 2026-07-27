@@ -1,0 +1,6 @@
+{
+  "name": "AEGIS",
+  "description": "Adaptive Executive & General Intelligence System — Security-first AI assistant with unified decision router, exact math, art generation, sales guidance, health disclaimers, and executive organizer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
