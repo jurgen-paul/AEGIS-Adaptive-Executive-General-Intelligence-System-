@@ -15,7 +15,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +52,8 @@ import com.example.ui.theme.AegisThreatRed
 fun SessionMemoryScreen(
     sessionMemory: AegisSessionMemory,
     onClearLogs: () -> Unit,
+    onExportLogs: (() -> Unit)? = null,
+    exportStatusText: String? = null,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -57,6 +62,92 @@ fun SessionMemoryScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Encrypted Chat History Export Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, AegisShieldGreen.copy(alpha = 0.6f), RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = AegisSurfaceDark)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = AegisShieldGreen
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "ENCRYPTED CHAT EXPORT",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AegisTextPrimary
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = AegisShieldGreen.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "AES-256 ENCRYPTED",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AegisShieldGreen,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Exports full chat history to a local encrypted file (.enc) after scrubbing sensitive PII (Emails, Credit Cards, Phones, API Keys, Passwords, SSNs).",
+                        fontSize = 12.sp,
+                        color = AegisTextSecondary,
+                        lineHeight = 16.sp
+                    )
+
+                    if (exportStatusText != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = AegisShieldGreen.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, AegisShieldGreen.copy(alpha = 0.3f))
+                        ) {
+                            Text(
+                                text = exportStatusText,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = AegisShieldGreen,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { onExportLogs?.invoke() },
+                        colors = ButtonDefaults.buttonColors(containerColor = AegisShieldGreen),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("aegis_export_secure_chat_button")
+                    ) {
+                        Icon(imageVector = Icons.Default.Download, contentDescription = null, tint = Color.Black)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Export Scrubbed & Encrypted Chat File", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
         // Active Session State Inspector Card
         item {
             Card(

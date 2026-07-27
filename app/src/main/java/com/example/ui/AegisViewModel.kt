@@ -209,4 +209,46 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
             dao.clearSecurityEvents()
         }
     }
+
+    fun clearActiveSessionContext() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.clearLogs()
+            _sessionMemory.value = AegisSessionMemory(
+                sessionId = java.util.UUID.randomUUID().toString(),
+                securityMode = _sessionMemory.value.securityMode,
+                lastResponse = "",
+                organizerLastAction = "session_cleared",
+                taskStatus = "idle"
+            )
+            val event = AegisSecurityEvent(
+                threatType = "idle_timeout_lock",
+                rawInput = "5-minute idle threshold exceeded",
+                actionTaken = "App locked and active session context cleared automatically",
+                severity = "MEDIUM"
+            )
+            dao.insertSecurityEvent(event)
+        }
+    }
+
+    fun exportSecureChatHistory(
+        context: android.content.Context,
+        onResult: (com.example.service.SecureExportResult) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val logsList = sessionLogs.value
+            val result = com.example.service.SecureExportManager.exportEncryptedChatHistory(context, logsList)
+            if (result.success) {
+                val event = AegisSecurityEvent(
+                    threatType = "chat_history_export",
+                    rawInput = "Exported ${result.totalLogsExported} chat logs to encrypted file",
+                    actionTaken = "Scrubbed ${result.totalScrubbedMatches} PII matches & saved AES-256 encrypted file: ${result.filePath}",
+                    severity = "LOW"
+                )
+                dao.insertSecurityEvent(event)
+            }
+            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                onResult(result)
+            }
+        }
+    }
 }

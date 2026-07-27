@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -39,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +56,7 @@ import com.example.ui.theme.SleekBorder
 import com.example.ui.theme.SleekCardBg
 import com.example.ui.theme.SleekDarkPromptBg
 import com.example.ui.theme.SleekPrimary
+import com.example.ui.theme.SleekPrimaryContainer
 import com.example.ui.theme.SleekSecurityGreen
 import com.example.ui.theme.SleekTextPrimary
 import com.example.ui.theme.SleekTextSecondary
@@ -71,8 +79,36 @@ fun ChatScreen(
     onSendMessage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var inputText by remember { mutableStateOf("") }
+    var voiceStatusMessage by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
+
+    // Speech-to-Text Activity Result Launcher
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenTextList = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = spokenTextList?.getOrNull(0)
+            if (!spokenText.isNullOrBlank()) {
+                voiceStatusMessage = "🎤 Speech captured: \"$spokenText\" (Passed through AEGIS Security Router)"
+                onSendMessage(spokenText)
+            }
+        }
+    }
+
+    val triggerSpeechToText = {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "AEGIS Voice Command - Zero-Trust Filter Active")
+        }
+        try {
+            speechLauncher.launch(intent)
+        } catch (e: Exception) {
+            voiceStatusMessage = "⚠️ Voice input error: ${e.localizedMessage ?: "Recognizer unavailable"}"
+        }
+    }
 
     LaunchedEffect(sessionLogs.size, isGenerating) {
         if (sessionLogs.isNotEmpty()) {
@@ -204,6 +240,24 @@ fun ChatScreen(
             }
         }
 
+        if (voiceStatusMessage != null) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                color = SleekPrimaryContainer,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = voiceStatusMessage!!,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SleekPrimary,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+        }
+
         // Bottom Input Text Field & Action Button
         Surface(
             modifier = Modifier
@@ -237,7 +291,7 @@ fun ChatScreen(
                     onValueChange = { inputText = it },
                     placeholder = {
                         Text(
-                            "Type your message...",
+                            "Type or speak message...",
                             fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.5f)
                         )
@@ -256,9 +310,29 @@ fun ChatScreen(
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
-                // Action Button
+                // Microphone Speech-to-Text Button
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(SleekPrimary.copy(alpha = 0.85f))
+                        .clickable { triggerSpeechToText() }
+                        .testTag("chat_voice_stt_button"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Voice Speech-to-Text Input",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                // Send Action Button
                 Box(
                     modifier = Modifier
                         .size(38.dp)

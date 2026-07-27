@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,8 +33,10 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Sell
@@ -56,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -83,10 +91,39 @@ fun CommandHubScreen(
     sessionLogs: List<AegisSessionLog>,
     isGenerating: Boolean,
     onSendPrompt: (String) -> Unit,
+    onExportLogs: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var inputText by remember { mutableStateOf("") }
+    var voiceStatusMessage by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
+
+    // Speech-to-Text Activity Result Launcher
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenTextList = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = spokenTextList?.getOrNull(0)
+            if (!spokenText.isNullOrBlank()) {
+                voiceStatusMessage = "🎤 Voice command captured: \"$spokenText\" (Passed through Security Router)"
+                onSendPrompt(spokenText)
+            }
+        }
+    }
+
+    val triggerSpeechToText = {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "AEGIS Voice Command - Security Filter Active")
+        }
+        try {
+            speechLauncher.launch(intent)
+        } catch (e: Exception) {
+            voiceStatusMessage = "⚠️ Voice input error: ${e.localizedMessage ?: "Recognizer unavailable"}"
+        }
+    }
 
     // Auto-scroll to bottom on new message
     LaunchedEffect(sessionLogs.size) {
@@ -156,6 +193,36 @@ fun CommandHubScreen(
                             color = SleekOnPrimaryContainer,
                             lineHeight = 22.sp
                         )
+
+                        if (onExportLogs != null) {
+                            Surface(
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { onExportLogs() }
+                                    .testTag("hub_export_chat_button"),
+                                color = SleekPrimary.copy(alpha = 0.15f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Download,
+                                        contentDescription = "Export Encrypted Chat",
+                                        tint = SleekPrimary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "Export Encrypted Chat (Scrubbed)",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SleekPrimary
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -348,6 +415,24 @@ fun CommandHubScreen(
             }
         }
 
+        if (voiceStatusMessage != null) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                color = SleekPrimaryContainer,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = voiceStatusMessage!!,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SleekPrimary,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+        }
+
         // Bottom Sleek Floating Prompt Container Bar
         Surface(
             modifier = Modifier
@@ -381,7 +466,7 @@ fun CommandHubScreen(
                     onValueChange = { inputText = it },
                     placeholder = {
                         Text(
-                            "Ask AEGIS prompt...",
+                            "Type or speak prompt...",
                             fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.5f)
                         )
@@ -400,7 +485,27 @@ fun CommandHubScreen(
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+
+                // Microphone Speech-to-Text Button
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(SleekPrimary.copy(alpha = 0.85f))
+                        .clickable { triggerSpeechToText() }
+                        .testTag("aegis_voice_stt_button"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Voice Speech-to-Text Command",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
 
                 Box(
                     modifier = Modifier
