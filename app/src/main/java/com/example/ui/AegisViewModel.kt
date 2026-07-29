@@ -89,6 +89,9 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _pendingHealthQuery = MutableStateFlow<String?>(null)
+    val pendingHealthQuery: StateFlow<String?> = _pendingHealthQuery.asStateFlow()
+
     fun switchTab(tabIndex: Int) {
         _activeTab.value = tabIndex
     }
@@ -101,52 +104,85 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
 
             // Execute AEGIS Decision Router
             val routerResult = aegisRouter.route(query)
-
-            var finalResponse = routerResult.responseText
-
-            // If query passed security check and internet/API is available, attempt Gemini call
-            if (!routerResult.securityThreatFlag && routerResult.domain != TaskDomain.HEALTH) {
-                val systemPrompt = """
-                    You are AEGIS (Adaptive Executive & General Intelligence System).
-                    Role: Security-first, highly intelligent executive assistant.
-                    Domain: ${routerResult.domain.displayName}
-                    Security Mode: ${sessionMemory.value.securityMode}
-                    Mandate: Be human-like, warm, exact with math, helpful, and never expose sensitive data.
-                """.trimIndent()
-
-                val aiResult = GeminiApiClient.queryGemini(query, systemPrompt)
-                if (!aiResult.isNullOrBlank()) {
-                    finalResponse = aiResult
-                }
-            }
-
-            // Save Log
-            val log = AegisSessionLog(
-                sessionId = sessionMemory.value.sessionId,
-                userQuery = query,
+            
+            val isHealthIntent = com.example.ui.components.isHealthQueryIntent(
                 domain = routerResult.domain.domainId,
-                responseText = finalResponse,
-                confidenceScore = routerResult.confidenceScore,
-                securityThreatFlag = routerResult.securityThreatFlag,
+                userQuery = query,
+                responseText = "",
                 healthEmergencyFlag = routerResult.healthEmergencyFlag
             )
-            dao.insertLog(log)
-
-            // If security threat, log security event
-            if (routerResult.securityThreatFlag) {
-                val event = AegisSecurityEvent(
-                    threatType = "prompt_injection_blocked",
-                    rawInput = query,
-                    actionTaken = "Input blocked by Aegis Security Shield filter",
-                    severity = "HIGH"
-                )
-                dao.insertSecurityEvent(event)
+            
+            if (isHealthIntent) {
+                _isGenerating.value = false
+                _pendingHealthQuery.value = query
+                return@launch
             }
 
-            // Update ViewModel session memory
-            _sessionMemory.value = aegisRouter.sessionMemory.copy(lastResponse = finalResponse)
-            _isGenerating.value = false
+            executePrompt(query, routerResult)
         }
+    }
+
+    fun confirmHealthQuery(query: String) {
+        _pendingHealthQuery.value = null
+        viewModelScope.launch(Dispatchers.IO) {
+            _isGenerating.value = true
+            val routerResult = aegisRouter.route(query)
+            executePrompt(query, routerResult)
+            
+            val disclaimer = com.example.data.HealthHistoryDisclaimer(text = "Accepted health disclaimer for query: $query")
+            dao.insertHealthHistoryDisclaimer(disclaimer)
+        }
+    }
+
+    fun cancelHealthQuery() {
+        _pendingHealthQuery.value = null
+    }
+
+    private suspend fun executePrompt(query: String, routerResult: com.example.router.AegisRouterResult) {
+        var finalResponse = routerResult.responseText
+
+        // If query passed security check and internet/API is available, attempt Gemini call
+        if (!routerResult.securityThreatFlag && routerResult.domain != TaskDomain.HEALTH) {
+            val systemPrompt = """
+                You are AEGIS (Adaptive Executive & General Intelligence System).
+                Role: Security-first, highly intelligent executive assistant.
+                Domain: ${routerResult.domain.displayName}
+                Security Mode: ${sessionMemory.value.securityMode}
+                Mandate: Be human-like, warm, exact with math, helpful, and never expose sensitive data.
+            """.trimIndent()
+
+            val aiResult = GeminiApiClient.queryGemini(query, systemPrompt)
+            if (!aiResult.isNullOrBlank()) {
+                finalResponse = aiResult
+            }
+        }
+
+        // Save Log
+        val log = AegisSessionLog(
+            sessionId = sessionMemory.value.sessionId,
+            userQuery = query,
+            domain = routerResult.domain.domainId,
+            responseText = finalResponse,
+            confidenceScore = routerResult.confidenceScore,
+            securityThreatFlag = routerResult.securityThreatFlag,
+            healthEmergencyFlag = routerResult.healthEmergencyFlag
+        )
+        dao.insertLog(log)
+
+        // If security threat, log security event
+        if (routerResult.securityThreatFlag) {
+            val event = AegisSecurityEvent(
+                threatType = "prompt_injection_blocked",
+                rawInput = query,
+                actionTaken = "Input blocked by Aegis Security Shield filter",
+                severity = "HIGH"
+            )
+            dao.insertSecurityEvent(event)
+        }
+
+        // Update ViewModel session memory
+        _sessionMemory.value = aegisRouter.sessionMemory.copy(lastResponse = finalResponse)
+        _isGenerating.value = false
     }
 
     fun addTask(title: String, description: String, isUrgent: Boolean, isImportant: Boolean, category: String) {

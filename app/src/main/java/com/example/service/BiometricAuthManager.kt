@@ -16,6 +16,20 @@ object BiometricAuthManager {
         return biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
+    fun getBiometricStatusDescription(context: Context): String {
+        val biometricManager = BiometricManager.from(context)
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        return when (biometricManager.canAuthenticate(authenticators)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> "Biometric hardware ready & enrolled (Fingerprint / Face ID)"
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> "No biometric hardware detected on device"
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> "Biometric sensor currently unavailable"
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> "No biometrics or device PIN enrolled in system settings"
+            else -> "Biometric security service initialized"
+        }
+    }
+
     fun promptBiometricAuthentication(
         activity: FragmentActivity,
         title: String = "AEGIS Security Lock",

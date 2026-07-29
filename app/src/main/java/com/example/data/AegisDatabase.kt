@@ -6,8 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [AegisSessionLog::class, AegisTask::class, AegisSecurityEvent::class],
-    version = 1,
+    entities = [
+        AegisSessionLog::class,
+        AegisTask::class,
+        AegisSecurityEvent::class,
+        HealthHistoryDisclaimer::class,
+        SalesNote::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class AegisDatabase : RoomDatabase() {

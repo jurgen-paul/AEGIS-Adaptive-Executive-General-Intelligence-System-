@@ -41,4 +41,21 @@ interface AegisDao {
 
     @Query("DELETE FROM aegis_security_events")
     suspend fun clearSecurityEvents()
+
+    // Health History Disclaimers
+    @Query("SELECT * FROM health_history_disclaimers ORDER BY timestamp DESC")
+    fun getAllHealthHistoryDisclaimers(): Flow<List<HealthHistoryDisclaimer>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHealthHistoryDisclaimer(disclaimer: HealthHistoryDisclaimer): Long
+
+    // Sales Notes
+    @Query("SELECT * FROM sales_notes ORDER BY timestamp DESC")
+    fun getAllSalesNotes(): Flow<List<SalesNote>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSalesNote(note: SalesNote): Long
+
+    @Query("DELETE FROM sales_notes WHERE id = :noteId")
+    suspend fun deleteSalesNote(noteId: Long)
 }

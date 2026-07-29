@@ -7,10 +7,17 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -141,6 +148,43 @@ fun AegisMainApp(
         val securityEvents by viewModel.securityEvents.collectAsStateWithLifecycle()
         val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
         val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
+        val pendingHealthQuery by viewModel.pendingHealthQuery.collectAsStateWithLifecycle()
+
+        if (pendingHealthQuery != null) {
+            AlertDialog(
+                onDismissRequest = { viewModel.cancelHealthQuery() },
+                title = { 
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.HealthAndSafety, contentDescription = null, tint = com.example.ui.theme.SleekWarningOrange)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Health & Medical Disclaimer", fontWeight = FontWeight.Bold, fontSize = 18.sp) 
+                    }
+                },
+                text = {
+                    Text(
+                        "AEGIS outputs are for informational and general wellness purposes only and do NOT constitute professional medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider for medical concerns. In emergencies, call 911 immediately.",
+                        fontSize = 14.sp
+                    )
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = { viewModel.confirmHealthQuery(pendingHealthQuery!!) }
+                    ) {
+                        Text("I Understand & Accept", fontWeight = FontWeight.Bold, color = com.example.ui.theme.SleekPrimary)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = { viewModel.cancelHealthQuery() }
+                    ) {
+                        Text("Cancel", color = com.example.ui.theme.SleekTextSecondary)
+                    }
+                },
+                containerColor = com.example.ui.theme.SleekCardBg,
+                titleContentColor = com.example.ui.theme.SleekTextPrimary,
+                textContentColor = com.example.ui.theme.SleekTextSecondary
+            )
+        }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -255,6 +299,7 @@ fun AegisMainApp(
                     )
                     1 -> ExecutiveOrganizerScreen(
                         tasks = tasks,
+                        securityEvents = securityEvents,
                         onAddTask = { title, desc, urgent, important, cat ->
                             viewModel.addTask(title, desc, urgent, important, cat)
                         },

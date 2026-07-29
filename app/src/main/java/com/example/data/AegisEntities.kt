@@ -39,3 +39,18 @@ data class AegisSecurityEvent(
     val severity: String = "HIGH", // LOW, MEDIUM, HIGH, CRITICAL
     val timestamp: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "health_history_disclaimers")
+data class HealthHistoryDisclaimer(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val text: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "sales_notes")
+data class SalesNote(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val content: String,
+    val timestamp: Long = System.currentTimeMillis()
+)

@@ -70,6 +70,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisSessionLog
+import com.example.ui.components.HealthDisclaimerBanner
+import com.example.ui.components.isHealthQueryIntent
 import com.example.data.AegisSessionMemory
 import com.example.data.TaskDomain
 import com.example.ui.theme.SleekBackground
@@ -535,6 +537,13 @@ fun CommandHubScreen(
 
 @Composable
 fun ChatMessageItem(log: AegisSessionLog) {
+    val isHealthIntent = isHealthQueryIntent(
+        domain = log.domain,
+        userQuery = log.userQuery,
+        responseText = log.responseText,
+        healthEmergencyFlag = log.healthEmergencyFlag
+    )
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -577,7 +586,7 @@ fun ChatMessageItem(log: AegisSessionLog) {
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
                     if (log.securityThreatFlag) SleekThreatRed
-                    else if (log.healthEmergencyFlag) SleekWarningOrange
+                    else if (isHealthIntent) SleekWarningOrange
                     else SleekBorder
                 ),
                 modifier = Modifier.fillMaxWidth(0.92f)
@@ -612,6 +621,13 @@ fun ChatMessageItem(log: AegisSessionLog) {
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    if (isHealthIntent) {
+                        HealthDisclaimerBanner(
+                            isEmergency = log.healthEmergencyFlag,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
 
                     Text(
                         text = log.responseText,
@@ -700,17 +716,7 @@ fun DomainSalesWidget(salesStage: String) {
 
 @Composable
 fun DomainHealthWidget(healthDisclaimer: String) {
-    Surface(
-        color = SleekWarningOrange.copy(alpha = 0.1f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SleekWarningOrange),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Text("🌿 Health & Wellness Protocol", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SleekWarningOrange)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(healthDisclaimer, fontSize = 11.sp, color = SleekTextPrimary)
-        }
-    }
+    HealthDisclaimerBanner(isEmergency = false)
 }
 
 @Composable
