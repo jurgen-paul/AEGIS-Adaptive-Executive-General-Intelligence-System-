@@ -23,6 +23,9 @@ interface AegisDao {
     @Query("SELECT * FROM aegis_tasks ORDER BY createdAt DESC")
     fun getAllTasks(): Flow<List<AegisTask>>
 
+    @Query("SELECT COUNT(*) FROM aegis_tasks")
+    suspend fun getTaskCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: AegisTask): Long
 

@@ -83,7 +83,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
             // Seed default tasks if empty
-            tasks.value.ifEmpty {
+            if (dao.getTaskCount() == 0) {
                 initialTasks.forEach { dao.insertTask(it) }
             }
         }
