@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Badge
@@ -50,6 +51,7 @@ fun AegisTopAppBar(
     threatCount: Int = 0,
     onShieldClick: () -> Unit,
     onMemoryClick: () -> Unit,
+    onLockClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -139,6 +141,28 @@ fun AegisTopAppBar(
                             Icon(
                                 imageVector = Icons.Default.Info,
                                 contentDescription = "Session Memory",
+                                tint = SleekPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    // Biometric Lock Vault Button
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(1.dp, SleekBorder, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = onLockClick,
+                            modifier = Modifier.testTag("aegis_lock_vault_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Lock Application",
                                 tint = SleekPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
