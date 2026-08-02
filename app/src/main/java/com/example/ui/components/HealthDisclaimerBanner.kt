@@ -123,3 +123,19 @@ fun HealthDisclaimerBanner(
         }
     }
 }
+
+/**
+ * Reusable 'HealthDisclaimer' Composable component that displays a mandatory medical warning,
+ * integrated into AI responses when health-related topics are detected.
+ */
+@Composable
+fun HealthDisclaimer(
+    isEmergency: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    HealthDisclaimerBanner(
+        isEmergency = isEmergency,
+        modifier = modifier
+    )
+}
+
