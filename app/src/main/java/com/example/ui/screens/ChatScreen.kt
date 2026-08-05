@@ -52,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisSessionLog
+import com.example.ui.components.ChatBubble
 import com.example.ui.components.HealthDisclaimerBanner
 import com.example.ui.components.isHealthQueryIntent
 import com.example.ui.theme.SleekBackground
@@ -426,95 +427,31 @@ private fun ChatMessageLogItem(log: AegisSessionLog) {
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // User Query Bubble (Right Aligned)
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            Surface(
-                shape = RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp),
-                color = SleekPrimary,
-                modifier = Modifier.fillMaxWidth(0.85f)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "YOU",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = log.userQuery,
-                        fontSize = 14.sp,
-                        color = Color.White
-                    )
-                }
-            }
-        }
+        // User Query Bubble
+        ChatBubble(
+            message = log.userQuery,
+            isUser = true,
+            senderName = "YOU"
+        )
 
-        // AEGIS Response Bubble (Left Aligned)
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Surface(
-                shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp),
-                color = SleekCardBg,
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    if (log.securityThreatFlag) SleekThreatRed
-                    else if (isHealthIntent) SleekWarningOrange
-                    else SleekBorder
-                ),
-                modifier = Modifier.fillMaxWidth(0.92f)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = if (log.securityThreatFlag) SleekThreatRed else SleekPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "AEGIS • ${log.domain.uppercase()}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = SleekPrimary
-                            )
-                        }
-
-                        Text(
-                            text = "${(log.confidenceScore * 100).toInt()}% match",
-                            fontSize = 10.sp,
-                            color = SleekTextSecondary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (isHealthIntent) {
-                        HealthDisclaimerBanner(
-                            isEmergency = log.healthEmergencyFlag,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-
-                    Text(
-                        text = log.responseText,
-                        fontSize = 13.sp,
-                        color = SleekTextPrimary,
-                        lineHeight = 18.sp
+        // AEGIS Assistant Response Bubble
+        ChatBubble(
+            message = log.responseText,
+            isUser = false,
+            senderName = "AEGIS",
+            domain = log.domain,
+            confidenceScore = log.confidenceScore,
+            securityThreatFlag = log.securityThreatFlag,
+            healthEmergencyFlag = log.healthEmergencyFlag,
+            isHealthIntent = isHealthIntent,
+            extraContent = if (isHealthIntent) {
+                {
+                    HealthDisclaimerBanner(
+                        isEmergency = log.healthEmergencyFlag,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
-            }
-        }
+            } else null
+        )
     }
 }
