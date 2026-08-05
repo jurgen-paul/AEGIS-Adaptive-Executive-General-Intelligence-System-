@@ -66,7 +66,17 @@ object GeminiApiClient {
             .create(GeminiApiService::class.java)
     }
 
-    suspend fun queryGemini(prompt: String, systemInstruction: String? = null): String? {
+    suspend fun queryGemini(
+        prompt: String,
+        systemInstruction: String? = null,
+        defenseLevel: String = "STRICT"
+    ): String? {
+        // Run Prompt Defense evaluation
+        val defenseResult = PromptDefenseLayer.evaluate(prompt, defenseLevel)
+        if (defenseResult.isBlocked) {
+            return "🛡️ AEGIS Prompt Defense Block: Request denied. Detected threats: [${defenseResult.detectedThreats.joinToString { it.displayName }}]. Severity: ${defenseResult.threatSeverity}."
+        }
+
         val apiKey = try {
             BuildConfig::class.java.getField("GEMINI_API_KEY").get(null) as? String
         } catch (e: Exception) {
@@ -80,7 +90,7 @@ object GeminiApiClient {
         return try {
             val req = GeminiGenerateRequest(
                 contents = listOf(
-                    GeminiContent(parts = listOf(GeminiPart(text = prompt)), role = "user")
+                    GeminiContent(parts = listOf(GeminiPart(text = defenseResult.formattedForGemini)), role = "user")
                 ),
                 systemInstruction = systemInstruction?.let {
                     GeminiContent(parts = listOf(GeminiPart(text = it)))

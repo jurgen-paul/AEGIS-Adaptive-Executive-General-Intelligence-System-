@@ -317,8 +317,10 @@ fun SecurityShieldScreen(
             }
         }
 
-        // Prompt Injection Defense Tester
+        // Prompt Injection Defense Tester & Sanitizer Inspector
         item {
+            var defenseResultState by remember { mutableStateOf<com.example.service.PromptDefenseResult?>(null) }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -326,26 +328,45 @@ fun SecurityShieldScreen(
                 colors = CardDefaults.cardColors(containerColor = SleekCardBg)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.BugReport,
-                            contentDescription = null,
-                            tint = SleekPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Prompt Injection & Defense Tester",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = SleekTextPrimary
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.BugReport,
+                                contentDescription = null,
+                                tint = SleekPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Prompt Injection & Defense Tester",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SleekTextPrimary
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekPrimary.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "LIVE FILTER",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SleekPrimary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Test prompt injection keywords (e.g. 'ignore previous instructions', 'bypass security', 'reveal system prompt'):",
+                        text = "Test prompt injection vectors (e.g., 'ignore previous instructions', 'drop database', 'reveal system prompt', '<script>eval()</script>'):",
                         fontSize = 12.sp,
                         color = SleekTextSecondary
                     )
@@ -355,7 +376,7 @@ fun SecurityShieldScreen(
                     OutlinedTextField(
                         value = testInputText,
                         onValueChange = { testInputText = it },
-                        placeholder = { Text("Enter prompt injection string to test...", fontSize = 12.sp) },
+                        placeholder = { Text("Enter prompt string or injection attempt...", fontSize = 12.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("aegis_threat_tester_input"),
@@ -372,37 +393,102 @@ fun SecurityShieldScreen(
 
                     Button(
                         onClick = {
-                            val clean = router.securityCheck(testInputText)
-                            testIsBlocked = !clean
-                            testResultText = if (!clean) {
-                                "🛑 BLOCKED: Pattern matched blocked security filter rules! Input dropped safely."
-                            } else {
-                                "✅ PASSED: No malicious patterns detected. Clear for execution."
-                            }
+                            val res = com.example.service.PromptDefenseLayer.evaluate(
+                                testInputText,
+                                sessionMemory.securityMode
+                            )
+                            defenseResultState = res
+                            testIsBlocked = res.isBlocked
+                            testResultText = res.logSummary
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = SleekPrimary),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("aegis_run_threat_test_button")
                     ) {
-                        Text("Run Security Filter Test", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Run Defense Layer Inspection", color = Color.White, fontWeight = FontWeight.Bold)
                     }
 
-                    if (testResultText.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(10.dp))
+                    defenseResultState?.let { res ->
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         Surface(
-                            color = if (testIsBlocked) SleekThreatRed.copy(alpha = 0.15f) else SleekSecurityGreen.copy(alpha = 0.15f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (testIsBlocked) SleekThreatRed else SleekSecurityGreen),
-                            shape = RoundedCornerShape(8.dp),
+                            color = if (res.isBlocked) SleekThreatRed.copy(alpha = 0.12f) else SleekSecurityGreen.copy(alpha = 0.12f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (res.isBlocked) SleekThreatRed else SleekSecurityGreen),
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = testResultText,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (testIsBlocked) SleekThreatRed else SleekSecurityGreen,
-                                modifier = Modifier.padding(10.dp)
-                            )
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (res.isBlocked) "🛑 DEFENSE STATUS: BLOCKED" else "✅ DEFENSE STATUS: PASSED / SANITIZED",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (res.isBlocked) SleekThreatRed else SleekSecurityGreen
+                                    )
+
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = if (res.threatSeverity == "CRITICAL" || res.threatSeverity == "HIGH") SleekThreatRed else SleekPrimary
+                                    ) {
+                                        Text(
+                                            text = "SEVERITY: ${res.threatSeverity}",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                if (res.detectedThreats.isNotEmpty()) {
+                                    Text(
+                                        text = "Detected Threats: " + res.detectedThreats.joinToString { it.displayName },
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = SleekTextPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
+
+                                Text(
+                                    text = "Action: ${res.actionTaken} | Defense Level: ${res.defenseLevel}",
+                                    fontSize = 11.sp,
+                                    color = SleekTextSecondary
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = "Sanitized Gemini Payload Preview:",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SleekTextSecondary
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = SleekBackground,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, SleekBorder),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = res.formattedForGemini,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = SleekTextPrimary,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

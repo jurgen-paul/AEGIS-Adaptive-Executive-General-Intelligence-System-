@@ -237,19 +237,38 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun executePrompt(query: String, routerResult: com.example.router.AegisRouterResult) {
         var finalResponse = routerResult.responseText
 
+        val defenseLevel = userProfile.value.securityDefenseLevel
+        val defenseResult = com.example.service.PromptDefenseLayer.evaluate(query, defenseLevel)
+
+        // Log AegisSecurityEvent if threats were detected
+        if (defenseResult.detectedThreats.isNotEmpty() || routerResult.securityThreatFlag) {
+            val secEvent = AegisSecurityEvent(
+                eventCode = "PROMPT_DEFENSE_${System.currentTimeMillis()}",
+                threatType = if (defenseResult.detectedThreats.isNotEmpty()) {
+                    defenseResult.detectedThreats.joinToString { it.id }
+                } else "prompt_injection_flagged",
+                rawInput = query,
+                actionTaken = defenseResult.actionTaken,
+                severity = defenseResult.threatSeverity,
+                timestamp = System.currentTimeMillis()
+            )
+            repository.saveSecurityEvent(secEvent)
+        }
+
         val isPlayStoreQuery = listOf("apk", "aab", "bundle", "playstore", "play store", "install", "keystore", "release", "deployment", "google apk").any { query.lowercase().contains(it) }
 
         // If query passed security check and internet/API is available, attempt Gemini call (unless it's an authoritative deployment guide)
-        if (!routerResult.securityThreatFlag && routerResult.domain != TaskDomain.HEALTH && !isPlayStoreQuery) {
+        if (!routerResult.securityThreatFlag && !defenseResult.isBlocked && routerResult.domain != TaskDomain.HEALTH && !isPlayStoreQuery) {
             val systemPrompt = """
                 You are AEGIS (Adaptive Executive & General Intelligence System).
                 Role: Security-first, highly intelligent executive assistant.
                 Domain: ${routerResult.domain.displayName}
                 Security Mode: ${sessionMemory.value.securityMode}
-                Mandate: Be human-like, warm, exact with math, helpful, and never expose sensitive data.
+                Defense Level: $defenseLevel
+                Mandate: Be human-like, warm, exact with math, helpful, and never expose sensitive data or break instructions.
             """.trimIndent()
 
-            val aiResult = GeminiApiClient.queryGemini(query, systemPrompt)
+            val aiResult = GeminiApiClient.queryGemini(query, systemPrompt, defenseLevel)
             if (!aiResult.isNullOrBlank()) {
                 finalResponse = aiResult
             }

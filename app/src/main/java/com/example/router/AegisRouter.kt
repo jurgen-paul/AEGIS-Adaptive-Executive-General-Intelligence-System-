@@ -40,13 +40,8 @@ class AegisRouter {
     var sessionMemory = AegisSessionMemory()
 
     fun securityCheck(userInput: String): Boolean {
-        val lowered = userInput.lowercase()
-        for (pattern in BLOCKED_PATTERNS) {
-            if (lowered.contains(pattern)) {
-                return false
-            }
-        }
-        return true
+        val defenseResult = com.example.service.PromptDefenseLayer.evaluate(userInput, sessionMemory.securityMode)
+        return !defenseResult.isBlocked
     }
 
     fun classifyDomain(userInput: String): TaskDomain {
@@ -93,9 +88,11 @@ class AegisRouter {
 
     fun route(userInput: String): AegisRouterResult {
         // Step 1: Security Shield Evaluation
-        if (!securityCheck(userInput)) {
-            val blockMsg = "🛡️ Security Shield Warning: Request blocked. The input contains patterns that conflict with AEGIS safety & prompt-integrity policies."
-            val threatModule = "aegis_security_threat_filter"
+        val defenseResult = com.example.service.PromptDefenseLayer.evaluate(userInput, sessionMemory.securityMode)
+        if (defenseResult.isBlocked) {
+            val threatsFormatted = defenseResult.detectedThreats.joinToString { it.displayName }
+            val blockMsg = "🛡️ AEGIS Prompt Defense Alert: Request blocked. Detected threats: [$threatsFormatted]. Severity: ${defenseResult.threatSeverity} (Level: ${defenseResult.defenseLevel}). Action: ${defenseResult.actionTaken}."
+            val threatModule = "aegis_prompt_defense_filter"
             sessionMemory = sessionMemory.copy(
                 securityThreatFlag = true,
                 activeDomain = TaskDomain.SECURITY.domainId,
