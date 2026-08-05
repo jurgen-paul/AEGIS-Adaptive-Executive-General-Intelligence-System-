@@ -34,25 +34,25 @@ private val AegisLightColorScheme = lightColorScheme(
 )
 
 private val AegisDarkColorScheme = darkColorScheme(
-    primary = SleekPrimary,
-    onPrimary = SleekOnPrimary,
-    primaryContainer = SleekPrimaryContainer,
-    onPrimaryContainer = SleekOnPrimaryContainer,
-    secondary = SleekSecurityGreen,
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFF28364D),
-    onSecondaryContainer = SleekPrimaryContainer,
-    tertiary = SleekPrimary,
-    onTertiary = Color.White,
-    background = Color(0xFF14171F),
+    primary = Color(0xFFA1C9FF),
+    onPrimary = Color(0xFF00325A),
+    primaryContainer = Color(0xFF284777),
+    onPrimaryContainer = Color(0xFFD6E3FF),
+    secondary = Color(0xFF78DC86),
+    onSecondary = Color(0xFF00390F),
+    secondaryContainer = Color(0xFF00531A),
+    onSecondaryContainer = Color(0xFF94F9A0),
+    tertiary = Color(0xFFA1C9FF),
+    onTertiary = Color(0xFF00325A),
+    background = Color(0xFF111318),
     onBackground = Color(0xFFE1E2E9),
-    surface = Color(0xFF1A1C1E),
+    surface = Color(0xFF191C22),
     onSurface = Color(0xFFE1E2E9),
-    surfaceVariant = Color(0xFF282B30),
+    surfaceVariant = Color(0xFF23262E),
     onSurfaceVariant = Color(0xFFA1A5B0),
-    outline = Color(0xFF383C45),
-    error = SleekThreatRed,
-    onError = Color.White
+    outline = Color(0xFF43474E),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005)
 )
 
 @Composable

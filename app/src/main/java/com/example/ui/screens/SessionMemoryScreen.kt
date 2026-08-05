@@ -14,20 +14,28 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,6 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisSessionMemory
+import com.example.data.UserProfile
+import com.example.ui.AegisThemeMode
+import com.example.ui.components.AccountProfileSettingsComponent
 import com.example.ui.theme.AegisCyanPrimary
 import com.example.ui.theme.AegisOutline
 import com.example.ui.theme.AegisShieldGreen
@@ -51,6 +62,20 @@ import com.example.ui.theme.AegisThreatRed
 @Composable
 fun SessionMemoryScreen(
     sessionMemory: AegisSessionMemory,
+    userProfile: UserProfile = UserProfile(),
+    themeMode: AegisThemeMode = AegisThemeMode.SYSTEM,
+    useDynamicColor: Boolean = false,
+    onUpdateProfile: (name: String, email: String, title: String, clearance: String, dept: String) -> Unit = { _, _, _, _, _ -> },
+    onToggleBiometricLock: () -> Unit = {},
+    onSetAutoLockTimeout: (String) -> Unit = {},
+    onToggleSecurityNotifications: () -> Unit = {},
+    onSetAiPersonaTone: (String) -> Unit = {},
+    onSetSecurityDefenseLevel: (String) -> Unit = {},
+    onSetPreferredLanguage: (String) -> Unit = {},
+    onSetPrimaryAiModel: (String) -> Unit = {},
+    onThemeModeSelected: (AegisThemeMode) -> Unit = {},
+    onDynamicColorToggled: () -> Unit = {},
+    onResetProfile: () -> Unit = {},
     onClearLogs: () -> Unit,
     onExportLogs: (() -> Unit)? = null,
     exportStatusText: String? = null,
@@ -62,92 +87,29 @@ fun SessionMemoryScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Encrypted Chat History Export Card
+        // Main Account Profile & Settings Component
         item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, AegisShieldGreen.copy(alpha = 0.6f), RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = AegisSurfaceDark)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null,
-                                tint = AegisShieldGreen
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "ENCRYPTED CHAT EXPORT",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AegisTextPrimary
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = AegisShieldGreen.copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                text = "AES-256 ENCRYPTED",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AegisShieldGreen,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Exports full chat history to a local encrypted file (.enc) after scrubbing sensitive PII (Emails, Credit Cards, Phones, API Keys, Passwords, SSNs).",
-                        fontSize = 12.sp,
-                        color = AegisTextSecondary,
-                        lineHeight = 16.sp
-                    )
-
-                    if (exportStatusText != null) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = AegisShieldGreen.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(8.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, AegisShieldGreen.copy(alpha = 0.3f))
-                        ) {
-                            Text(
-                                text = exportStatusText,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = AegisShieldGreen,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Button(
-                        onClick = { onExportLogs?.invoke() },
-                        colors = ButtonDefaults.buttonColors(containerColor = AegisShieldGreen),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("aegis_export_secure_chat_button")
-                    ) {
-                        Icon(imageVector = Icons.Default.Download, contentDescription = null, tint = Color.Black)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Export Scrubbed & Encrypted Chat File", color = Color.Black, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+            AccountProfileSettingsComponent(
+                userProfile = userProfile,
+                themeMode = themeMode,
+                useDynamicColor = useDynamicColor,
+                onUpdateProfile = onUpdateProfile,
+                onToggleBiometricLock = onToggleBiometricLock,
+                onSetAutoLockTimeout = onSetAutoLockTimeout,
+                onToggleSecurityNotifications = onToggleSecurityNotifications,
+                onSetAiPersonaTone = onSetAiPersonaTone,
+                onSetSecurityDefenseLevel = onSetSecurityDefenseLevel,
+                onSetPreferredLanguage = onSetPreferredLanguage,
+                onSetPrimaryAiModel = onSetPrimaryAiModel,
+                onThemeModeSelected = onThemeModeSelected,
+                onDynamicColorToggled = onDynamicColorToggled,
+                onResetProfile = onResetProfile,
+                onClearLogs = onClearLogs,
+                onExportLogs = onExportLogs,
+                exportStatusText = exportStatusText
+            )
         }
+
         // Active Session State Inspector Card
         item {
             Card(
@@ -170,7 +132,7 @@ fun SessionMemoryScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "SESSION MEMORY STATE",
+                                text = "LIVE SESSION MEMORY STATE",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AegisTextPrimary
@@ -247,21 +209,6 @@ fun SessionMemoryScreen(
                     MemoryParamRow("organizer_default_view", sessionMemory.organizerDefaultView)
                     MemoryParamRow("api_endpoint", sessionMemory.apiEndpoint)
                 }
-            }
-        }
-
-        // Actions
-        item {
-            Button(
-                onClick = onClearLogs,
-                colors = ButtonDefaults.buttonColors(containerColor = AegisThreatRed),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("aegis_clear_session_logs_button")
-            ) {
-                Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.White)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Clear All Session Logs", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }

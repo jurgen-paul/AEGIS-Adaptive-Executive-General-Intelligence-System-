@@ -70,6 +70,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisSessionLog
+import com.example.data.AegisTask
+import com.example.ui.components.EisenhowerMatrixComponent
 import com.example.ui.components.HealthDisclaimerBanner
 import com.example.ui.components.isHealthQueryIntent
 import com.example.data.AegisSessionMemory
@@ -91,8 +93,13 @@ import com.example.ui.theme.SleekWarningOrange
 fun CommandHubScreen(
     sessionMemory: AegisSessionMemory,
     sessionLogs: List<AegisSessionLog>,
+    tasks: List<AegisTask> = emptyList(),
     isGenerating: Boolean,
     onSendPrompt: (String) -> Unit,
+    onAddTask: ((title: String, desc: String, isUrgent: Boolean, isImportant: Boolean, category: String) -> Unit)? = null,
+    onUpdateTaskStatus: ((task: AegisTask, newStatus: String) -> Unit)? = null,
+    onUpdateTaskPriority: ((task: AegisTask, isUrgent: Boolean, isImportant: Boolean) -> Unit)? = null,
+    onDeleteTask: ((taskId: Long) -> Unit)? = null,
     onExportLogs: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -227,6 +234,25 @@ fun CommandHubScreen(
                         }
                     }
                 }
+            }
+
+            // Eisenhower Priority Matrix Dashboard Component
+            item {
+                EisenhowerMatrixComponent(
+                    tasks = tasks,
+                    onAddTask = { title, desc, urgent, important, cat ->
+                        onAddTask?.invoke(title, desc, urgent, important, cat)
+                    },
+                    onUpdateStatus = { task, status ->
+                        onUpdateTaskStatus?.invoke(task, status)
+                    },
+                    onUpdatePriority = { task, urgent, important ->
+                        onUpdateTaskPriority?.invoke(task, urgent, important)
+                    },
+                    onDeleteTask = { id ->
+                        onDeleteTask?.invoke(id)
+                    }
+                )
             }
 
             // Sleek 2-Column Grid Cards for Domains

@@ -12,6 +12,7 @@ import com.example.data.AegisTask
 import com.example.data.ChatMessageEntity
 import com.example.data.ChatSessionEntity
 import com.example.data.TaskDomain
+import com.example.data.UserProfile
 import com.example.router.AegisRouter
 import com.example.service.GeminiApiClient
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+enum class AegisThemeMode {
+    SYSTEM, LIGHT, DARK
+}
+
 class AegisViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AegisDatabase.getDatabase(application)
@@ -29,6 +34,81 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AegisChatRepository(dao)
 
     private val aegisRouter = AegisRouter()
+
+    private val _themeMode = MutableStateFlow(AegisThemeMode.SYSTEM)
+    val themeMode: StateFlow<AegisThemeMode> = _themeMode.asStateFlow()
+
+    private val _useDynamicColor = MutableStateFlow(false)
+    val useDynamicColor: StateFlow<Boolean> = _useDynamicColor.asStateFlow()
+
+    fun cycleThemeMode() {
+        _themeMode.value = when (_themeMode.value) {
+            AegisThemeMode.SYSTEM -> AegisThemeMode.LIGHT
+            AegisThemeMode.LIGHT -> AegisThemeMode.DARK
+            AegisThemeMode.DARK -> AegisThemeMode.SYSTEM
+        }
+    }
+
+    fun setThemeMode(mode: AegisThemeMode) {
+        _themeMode.value = mode
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        _useDynamicColor.value = enabled
+    }
+
+    private val _userProfile = MutableStateFlow(UserProfile())
+    val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
+
+    fun updateUserProfile(fullName: String, email: String, title: String, clearanceLevel: String, department: String) {
+        _userProfile.value = _userProfile.value.copy(
+            fullName = fullName,
+            email = email,
+            title = title,
+            clearanceLevel = clearanceLevel,
+            department = department
+        )
+    }
+
+    fun toggleBiometricLock() {
+        _userProfile.value = _userProfile.value.copy(
+            biometricLockEnabled = !_userProfile.value.biometricLockEnabled
+        )
+    }
+
+    fun setAutoLockTimeout(timeout: String) {
+        _userProfile.value = _userProfile.value.copy(autoLockTimeout = timeout)
+    }
+
+    fun toggleSecurityNotifications() {
+        _userProfile.value = _userProfile.value.copy(
+            securityNotificationsEnabled = !_userProfile.value.securityNotificationsEnabled
+        )
+    }
+
+    fun setAiPersonaTone(tone: String) {
+        _userProfile.value = _userProfile.value.copy(aiPersonaTone = tone)
+        _sessionMemory.value = _sessionMemory.value.copy(salesTone = tone)
+    }
+
+    fun setSecurityDefenseLevel(level: String) {
+        _userProfile.value = _userProfile.value.copy(securityDefenseLevel = level)
+        toggleSecurityMode(level.lowercase())
+    }
+
+    fun setPreferredLanguage(language: String) {
+        _userProfile.value = _userProfile.value.copy(preferredLanguage = language)
+        _sessionMemory.value = _sessionMemory.value.copy(defaultLanguage = language)
+    }
+
+    fun setPrimaryAiModel(model: String) {
+        _userProfile.value = _userProfile.value.copy(primaryAiModel = model)
+        _sessionMemory.value = _sessionMemory.value.copy(modelName = model)
+    }
+
+    fun resetProfileToDefaults() {
+        _userProfile.value = UserProfile()
+    }
 
     private val _sessionMemory = MutableStateFlow(aegisRouter.sessionMemory)
     val sessionMemory: StateFlow<AegisSessionMemory> = _sessionMemory.asStateFlow()
@@ -269,6 +349,17 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
             _sessionMemory.value = _sessionMemory.value.copy(
                 organizerLastAction = "updated",
                 taskStatus = newStatus
+            )
+        }
+    }
+
+    fun updateTaskPriority(task: AegisTask, isUrgent: Boolean, isImportant: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = task.copy(isUrgent = isUrgent, isImportant = isImportant)
+            repository.updateTask(updated)
+            _sessionMemory.value = _sessionMemory.value.copy(
+                organizerLastAction = "re-prioritized",
+                taskStatus = "updated"
             )
         }
     }

@@ -65,7 +65,20 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            AegisTheme {
+            val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+            val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
+            val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+            val isDark = when (themeMode) {
+                com.example.ui.AegisThemeMode.SYSTEM -> isSystemDark
+                com.example.ui.AegisThemeMode.LIGHT -> false
+                com.example.ui.AegisThemeMode.DARK -> true
+            }
+
+            AegisTheme(
+                darkTheme = isDark,
+                dynamicColor = useDynamicColor
+            ) {
                 AegisMainApp(
                     viewModel = viewModel,
                     lastInteractionTimestamp = lastActivityUserInteraction,
@@ -142,6 +155,9 @@ fun AegisMainApp(
                 }
             }
     ) {
+        val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+        val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
+        val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
         val sessionMemory by viewModel.sessionMemory.collectAsStateWithLifecycle()
         val sessionLogs by viewModel.sessionLogs.collectAsStateWithLifecycle()
         val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -193,9 +209,11 @@ fun AegisMainApp(
                     AegisTopAppBar(
                         sessionMemory = sessionMemory,
                         threatCount = securityEvents.size,
+                        themeMode = themeMode,
                         onShieldClick = { viewModel.switchTab(2) },
                         onMemoryClick = { viewModel.switchTab(3) },
-                        onLockClick = { isAppUnlocked = false }
+                        onLockClick = { isAppUnlocked = false },
+                        onToggleThemeClick = { viewModel.cycleThemeMode() }
                     )
 
                     SecurityAlertBanner(
@@ -214,11 +232,11 @@ fun AegisMainApp(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
-                            .background(SleekBorder)
+                            .background(androidx.compose.material3.MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     )
                     NavigationBar(
-                        containerColor = SleekCardBg,
-                        contentColor = SleekPrimary,
+                        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                        contentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                         tonalElevation = 0.dp,
                         modifier = Modifier.testTag("aegis_bottom_navigation")
                     ) {
@@ -228,11 +246,11 @@ fun AegisMainApp(
                             icon = { Text("🏠", fontSize = 18.sp) },
                             label = { Text("Home", fontSize = 10.sp, fontWeight = if (activeTab == 0) FontWeight.Bold else FontWeight.Normal) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SleekPrimary,
-                                selectedTextColor = SleekPrimary,
-                                indicatorColor = SleekPrimaryContainer,
-                                unselectedIconColor = SleekTextSecondary,
-                                unselectedTextColor = SleekTextSecondary
+                                selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             modifier = Modifier.testTag("aegis_tab_command_hub")
                         )
@@ -243,11 +261,11 @@ fun AegisMainApp(
                             icon = { Text("📅", fontSize = 18.sp) },
                             label = { Text("Organizer", fontSize = 10.sp, fontWeight = if (activeTab == 1) FontWeight.Bold else FontWeight.Normal) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SleekPrimary,
-                                selectedTextColor = SleekPrimary,
-                                indicatorColor = SleekPrimaryContainer,
-                                unselectedIconColor = SleekTextSecondary,
-                                unselectedTextColor = SleekTextSecondary
+                                selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             modifier = Modifier.testTag("aegis_tab_organizer")
                         )
@@ -258,11 +276,11 @@ fun AegisMainApp(
                             icon = { Text("🛡️", fontSize = 18.sp) },
                             label = { Text("Vault", fontSize = 10.sp, fontWeight = if (activeTab == 2) FontWeight.Bold else FontWeight.Normal) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SleekPrimary,
-                                selectedTextColor = SleekPrimary,
-                                indicatorColor = SleekPrimaryContainer,
-                                unselectedIconColor = SleekTextSecondary,
-                                unselectedTextColor = SleekTextSecondary
+                                selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             modifier = Modifier.testTag("aegis_tab_security")
                         )
@@ -273,11 +291,11 @@ fun AegisMainApp(
                             icon = { Text("⚙️", fontSize = 18.sp) },
                             label = { Text("Config", fontSize = 10.sp, fontWeight = if (activeTab == 3) FontWeight.Bold else FontWeight.Normal) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = SleekPrimary,
-                                selectedTextColor = SleekPrimary,
-                                indicatorColor = SleekPrimaryContainer,
-                                unselectedIconColor = SleekTextSecondary,
-                                unselectedTextColor = SleekTextSecondary
+                                selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             modifier = Modifier.testTag("aegis_tab_memory")
                         )
@@ -294,8 +312,21 @@ fun AegisMainApp(
                     0 -> CommandHubScreen(
                         sessionMemory = sessionMemory,
                         sessionLogs = sessionLogs,
+                        tasks = tasks,
                         isGenerating = isGenerating,
                         onSendPrompt = { viewModel.processUserPrompt(it) },
+                        onAddTask = { title, desc, urgent, important, cat ->
+                            viewModel.addTask(title, desc, urgent, important, cat)
+                        },
+                        onUpdateTaskStatus = { task, status ->
+                            viewModel.updateTaskStatus(task, status)
+                        },
+                        onUpdateTaskPriority = { task, urgent, important ->
+                            viewModel.updateTaskPriority(task, urgent, important)
+                        },
+                        onDeleteTask = { id ->
+                            viewModel.deleteTask(id)
+                        },
                         onExportLogs = handleExportChatHistory
                     )
                     1 -> ExecutiveOrganizerScreen(
@@ -309,6 +340,9 @@ fun AegisMainApp(
                         },
                         onDeleteTask = { id ->
                             viewModel.deleteTask(id)
+                        },
+                        onUpdatePriority = { task, urgent, important ->
+                            viewModel.updateTaskPriority(task, urgent, important)
                         }
                     )
                     2 -> SecurityShieldScreen(
@@ -323,6 +357,22 @@ fun AegisMainApp(
                     )
                     3 -> SessionMemoryScreen(
                         sessionMemory = sessionMemory,
+                        userProfile = userProfile,
+                        themeMode = themeMode,
+                        useDynamicColor = useDynamicColor,
+                        onUpdateProfile = { name, email, title, clearance, dept ->
+                            viewModel.updateUserProfile(name, email, title, clearance, dept)
+                        },
+                        onToggleBiometricLock = { viewModel.toggleBiometricLock() },
+                        onSetAutoLockTimeout = { viewModel.setAutoLockTimeout(it) },
+                        onToggleSecurityNotifications = { viewModel.toggleSecurityNotifications() },
+                        onSetAiPersonaTone = { viewModel.setAiPersonaTone(it) },
+                        onSetSecurityDefenseLevel = { viewModel.setSecurityDefenseLevel(it) },
+                        onSetPreferredLanguage = { viewModel.setPreferredLanguage(it) },
+                        onSetPrimaryAiModel = { viewModel.setPrimaryAiModel(it) },
+                        onThemeModeSelected = { viewModel.setThemeMode(it) },
+                        onDynamicColorToggled = { viewModel.setDynamicColor(!useDynamicColor) },
+                        onResetProfile = { viewModel.resetProfileToDefaults() },
                         onClearLogs = { viewModel.clearLogs() },
                         onExportLogs = handleExportChatHistory,
                         exportStatusText = exportStatusMessage

@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisSecurityEvent
 import com.example.data.AegisTask
+import com.example.ui.components.EisenhowerMatrixComponent
 import com.example.ui.theme.AegisCyanPrimary
 import com.example.ui.theme.AegisOutline
 import com.example.ui.theme.AegisShieldGreen
@@ -99,6 +100,7 @@ fun ExecutiveOrganizerScreen(
     onAddTask: (title: String, desc: String, isUrgent: Boolean, isImportant: Boolean, category: String) -> Unit,
     onUpdateStatus: (task: AegisTask, newStatus: String) -> Unit,
     onDeleteTask: (taskId: Long) -> Unit,
+    onUpdatePriority: ((task: AegisTask, isUrgent: Boolean, isImportant: Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -478,65 +480,19 @@ fun ExecutiveOrganizerScreen(
 
                 1 -> {
                     // Eisenhower 4-Quadrant Priority Matrix View
-                    Column(
+                    LazyColumn(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Q1: Urgent & Important
-                            MatrixQuadrantCard(
-                                title = "DO FIRST (Q1)",
-                                subtitle = "Urgent & Important",
-                                accentColor = AegisThreatRed,
-                                tasks = tasks.filter { it.isUrgent && it.isImportant },
+                        item {
+                            EisenhowerMatrixComponent(
+                                tasks = tasks,
+                                onAddTask = onAddTask,
                                 onUpdateStatus = onUpdateStatus,
-                                onDeleteTask = onDeleteTask,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            // Q2: Important, Not Urgent
-                            MatrixQuadrantCard(
-                                title = "SCHEDULE (Q2)",
-                                subtitle = "Important, Not Urgent",
-                                accentColor = AegisCyanPrimary,
-                                tasks = tasks.filter { !it.isUrgent && it.isImportant },
-                                onUpdateStatus = onUpdateStatus,
-                                onDeleteTask = onDeleteTask,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Q3: Urgent, Not Important
-                            MatrixQuadrantCard(
-                                title = "DELEGATE (Q3)",
-                                subtitle = "Urgent, Not Important",
-                                accentColor = AegisWarningOrange,
-                                tasks = tasks.filter { it.isUrgent && !it.isImportant },
-                                onUpdateStatus = onUpdateStatus,
-                                onDeleteTask = onDeleteTask,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            // Q4: Neither
-                            MatrixQuadrantCard(
-                                title = "ROUTINE (Q4)",
-                                subtitle = "Low Priority",
-                                accentColor = AegisTextSecondary,
-                                tasks = tasks.filter { !it.isUrgent && !it.isImportant },
-                                onUpdateStatus = onUpdateStatus,
-                                onDeleteTask = onDeleteTask,
-                                modifier = Modifier.weight(1f)
+                                onUpdatePriority = { task, urgent, important ->
+                                    onUpdatePriority?.invoke(task, urgent, important)
+                                },
+                                onDeleteTask = onDeleteTask
                             )
                         }
                     }

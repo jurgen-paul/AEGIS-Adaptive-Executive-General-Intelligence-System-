@@ -15,8 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Badge
@@ -36,36 +39,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisSessionMemory
-import com.example.ui.theme.SleekBackground
-import com.example.ui.theme.SleekBorder
-import com.example.ui.theme.SleekOnPrimaryContainer
-import com.example.ui.theme.SleekPrimary
-import com.example.ui.theme.SleekPrimaryContainer
-import com.example.ui.theme.SleekSecurityGreen
-import com.example.ui.theme.SleekTextSecondary
+import com.example.ui.AegisThemeMode
 import com.example.ui.theme.SleekThreatRed
 
 @Composable
 fun AegisTopAppBar(
     sessionMemory: AegisSessionMemory,
     threatCount: Int = 0,
+    themeMode: AegisThemeMode = AegisThemeMode.SYSTEM,
     onShieldClick: () -> Unit,
     onMemoryClick: () -> Unit,
     onLockClick: () -> Unit = {},
+    onToggleThemeClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .testTag("aegis_top_app_bar"),
-        color = SleekBackground,
+        color = MaterialTheme.colorScheme.background,
         shadowElevation = 0.dp
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -73,30 +72,57 @@ fun AegisTopAppBar(
                 Column {
                     Text(
                         text = "AEGIS",
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = SleekPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         letterSpacing = (-0.5).sp
                     )
                     Text(
                         text = "SYSTEM ACTIVE • ${sessionMemory.securityMode.uppercase()} MODE",
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = SleekTextSecondary,
-                        letterSpacing = 1.2.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 1.1.sp
                     )
                 }
 
-                // Top Right Action Shield Badge Box
+                // Top Right Actions
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    // Theme Mode Toggle Button
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(SleekPrimaryContainer),
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(14.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = onToggleThemeClick,
+                            modifier = Modifier.testTag("aegis_theme_toggle_button")
+                        ) {
+                            Icon(
+                                imageVector = when (themeMode) {
+                                    AegisThemeMode.LIGHT -> Icons.Default.LightMode
+                                    AegisThemeMode.DARK -> Icons.Default.DarkMode
+                                    AegisThemeMode.SYSTEM -> Icons.Default.SettingsSuggest
+                                },
+                                contentDescription = "Toggle Light/Dark Theme",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // Security Shield Button
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         IconButton(
@@ -118,8 +144,8 @@ fun AegisTopAppBar(
                                 Icon(
                                     imageVector = if (threatCount > 0) Icons.Default.Warning else Icons.Default.Shield,
                                     contentDescription = "Security Shield Status",
-                                    tint = if (threatCount > 0) SleekThreatRed else SleekOnPrimaryContainer,
-                                    modifier = Modifier.size(24.dp)
+                                    tint = if (threatCount > 0) SleekThreatRed else MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
@@ -128,10 +154,10 @@ fun AegisTopAppBar(
                     // Session Memory Info Button
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(MaterialTheme.colorScheme.surface)
-                            .border(1.dp, SleekBorder, RoundedCornerShape(16.dp)),
+                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(14.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         IconButton(
@@ -141,8 +167,8 @@ fun AegisTopAppBar(
                             Icon(
                                 imageVector = Icons.Default.Info,
                                 contentDescription = "Session Memory",
-                                tint = SleekPrimary,
-                                modifier = Modifier.size(20.dp)
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -150,10 +176,10 @@ fun AegisTopAppBar(
                     // Biometric Lock Vault Button
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(MaterialTheme.colorScheme.surface)
-                            .border(1.dp, SleekBorder, RoundedCornerShape(16.dp)),
+                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(14.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         IconButton(
@@ -163,8 +189,8 @@ fun AegisTopAppBar(
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Lock Application",
-                                tint = SleekPrimary,
-                                modifier = Modifier.size(20.dp)
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -175,7 +201,7 @@ fun AegisTopAppBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(SleekBorder)
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             )
         }
     }
