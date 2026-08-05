@@ -31,7 +31,7 @@ abstract class AegisDatabase : RoomDatabase() {
                     context.applicationContext,
                     AegisDatabase::class.java,
                     "aegis_database"
-                ).fallbackToDestructiveMigration().build()
+                ).fallbackToDestructiveMigration(dropAllTables = true).build()
                 INSTANCE = instance
                 instance
             }

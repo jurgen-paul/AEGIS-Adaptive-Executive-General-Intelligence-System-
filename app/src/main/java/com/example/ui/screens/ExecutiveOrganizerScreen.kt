@@ -29,7 +29,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Grid3x3
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Schedule
@@ -238,7 +238,7 @@ fun ExecutiveOrganizerScreen(
                     onClick = { selectedFilterTab = 2 },
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.List, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("ALL TASKS (${tasks.size})", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
@@ -388,7 +388,7 @@ fun ExecutiveOrganizerScreen(
                                         }
                                         Spacer(modifier = Modifier.height(6.dp))
                                         LinearProgressIndicator(
-                                            progress = completionRate,
+                                            progress = { completionRate },
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .height(6.dp)
