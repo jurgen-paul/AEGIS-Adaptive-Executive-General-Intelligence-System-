@@ -61,4 +61,39 @@ interface AegisDao {
 
     @Query("DELETE FROM sales_notes WHERE id = :noteId")
     suspend fun deleteSalesNote(noteId: Long)
+
+    // Chat Session Metadata History
+    @Query("SELECT * FROM aegis_chat_sessions ORDER BY lastUpdatedAt DESC")
+    fun getAllChatSessions(): Flow<List<ChatSessionEntity>>
+
+    @Query("SELECT * FROM aegis_chat_sessions WHERE sessionId = :sessionId LIMIT 1")
+    fun getChatSessionById(sessionId: String): Flow<ChatSessionEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChatSession(session: ChatSessionEntity)
+
+    @Update
+    suspend fun updateChatSession(session: ChatSessionEntity)
+
+    @Query("DELETE FROM aegis_chat_sessions WHERE sessionId = :sessionId")
+    suspend fun deleteChatSession(sessionId: String)
+
+    @Query("DELETE FROM aegis_chat_sessions")
+    suspend fun clearAllChatSessions()
+
+    // Chat Messages
+    @Query("SELECT * FROM aegis_chat_messages WHERE sessionId = :sessionId ORDER BY timestamp ASC")
+    fun getMessagesForSession(sessionId: String): Flow<List<ChatMessageEntity>>
+
+    @Query("SELECT * FROM aegis_chat_messages ORDER BY timestamp ASC")
+    fun getAllMessages(): Flow<List<ChatMessageEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChatMessage(message: ChatMessageEntity): Long
+
+    @Query("DELETE FROM aegis_chat_messages WHERE sessionId = :sessionId")
+    suspend fun deleteMessagesForSession(sessionId: String)
+
+    @Query("DELETE FROM aegis_chat_messages")
+    suspend fun clearAllMessages()
 }

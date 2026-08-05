@@ -3,11 +3,14 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.AegisChatRepository
 import com.example.data.AegisDatabase
 import com.example.data.AegisSecurityEvent
 import com.example.data.AegisSessionLog
 import com.example.data.AegisSessionMemory
 import com.example.data.AegisTask
+import com.example.data.ChatMessageEntity
+import com.example.data.ChatSessionEntity
 import com.example.data.TaskDomain
 import com.example.router.AegisRouter
 import com.example.service.GeminiApiClient
@@ -23,25 +26,38 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AegisDatabase.getDatabase(application)
     private val dao = db.aegisDao()
+    private val repository = AegisChatRepository(dao)
 
     private val aegisRouter = AegisRouter()
 
     private val _sessionMemory = MutableStateFlow(aegisRouter.sessionMemory)
     val sessionMemory: StateFlow<AegisSessionMemory> = _sessionMemory.asStateFlow()
 
-    val sessionLogs: StateFlow<List<AegisSessionLog>> = dao.getAllLogs().stateIn(
+    val sessionLogs: StateFlow<List<AegisSessionLog>> = repository.allLogs.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    val tasks: StateFlow<List<AegisTask>> = dao.getAllTasks().stateIn(
+    val tasks: StateFlow<List<AegisTask>> = repository.allTasks.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    val securityEvents: StateFlow<List<AegisSecurityEvent>> = dao.getAllSecurityEvents().stateIn(
+    val securityEvents: StateFlow<List<AegisSecurityEvent>> = repository.allSecurityEvents.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val chatSessions: StateFlow<List<ChatSessionEntity>> = repository.allSessions.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val chatMessages: StateFlow<List<ChatMessageEntity>> = repository.allMessages.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -83,8 +99,8 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
             // Seed default tasks if empty
-            if (dao.getTaskCount() == 0) {
-                initialTasks.forEach { dao.insertTask(it) }
+            if (repository.getTaskCount() == 0) {
+                initialTasks.forEach { repository.saveTask(it) }
             }
         }
     }
@@ -130,7 +146,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
             executePrompt(query, routerResult)
             
             val disclaimer = com.example.data.HealthHistoryDisclaimer(text = "Accepted health disclaimer for query: $query")
-            dao.insertHealthHistoryDisclaimer(disclaimer)
+            repository.saveHealthDisclaimer(disclaimer)
         }
     }
 
@@ -159,17 +175,58 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        // Save Log
+        val currentSessionId = sessionMemory.value.sessionId
+        val now = System.currentTimeMillis()
+
+        // Room Persistence: Save Chat Messages (User + Assistant)
+        val userChatMessage = ChatMessageEntity(
+            sessionId = currentSessionId,
+            sender = "user",
+            content = query,
+            domain = routerResult.domain.domainId,
+            confidenceScore = routerResult.confidenceScore,
+            securityThreatFlag = routerResult.securityThreatFlag,
+            healthEmergencyFlag = routerResult.healthEmergencyFlag,
+            timestamp = now
+        )
+        repository.saveMessage(userChatMessage)
+
+        val assistantChatMessage = ChatMessageEntity(
+            sessionId = currentSessionId,
+            sender = "assistant",
+            content = finalResponse,
+            domain = routerResult.domain.domainId,
+            confidenceScore = routerResult.confidenceScore,
+            securityThreatFlag = routerResult.securityThreatFlag,
+            healthEmergencyFlag = routerResult.healthEmergencyFlag,
+            timestamp = now + 1
+        )
+        repository.saveMessage(assistantChatMessage)
+
+        // Room Persistence: Update / Insert Session Metadata
+        val titleSnippet = if (query.length > 30) query.take(30) + "..." else query
+        val sessionMetadata = ChatSessionEntity(
+            sessionId = currentSessionId,
+            title = "Session: $titleSnippet",
+            activeDomain = routerResult.domain.domainId,
+            securityMode = sessionMemory.value.securityMode,
+            lastUpdatedAt = now,
+            messageCount = (chatMessages.value.filter { it.sessionId == currentSessionId }.size) + 2
+        )
+        repository.saveSession(sessionMetadata)
+
+        // Save Audit Session Log
         val log = AegisSessionLog(
-            sessionId = sessionMemory.value.sessionId,
+            sessionId = currentSessionId,
             userQuery = query,
             domain = routerResult.domain.domainId,
             responseText = finalResponse,
             confidenceScore = routerResult.confidenceScore,
             securityThreatFlag = routerResult.securityThreatFlag,
-            healthEmergencyFlag = routerResult.healthEmergencyFlag
+            healthEmergencyFlag = routerResult.healthEmergencyFlag,
+            timestamp = now
         )
-        dao.insertLog(log)
+        repository.saveLog(log)
 
         // If security threat, log security event
         if (routerResult.securityThreatFlag) {
@@ -179,7 +236,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 actionTaken = "Input blocked by Aegis Security Shield filter",
                 severity = "HIGH"
             )
-            dao.insertSecurityEvent(event)
+            repository.saveSecurityEvent(event)
         }
 
         // Update ViewModel session memory
@@ -197,7 +254,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 category = category,
                 status = "pending"
             )
-            dao.insertTask(task)
+            repository.saveTask(task)
             _sessionMemory.value = _sessionMemory.value.copy(
                 organizerLastAction = "created",
                 taskStatus = "pending"
@@ -208,7 +265,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     fun updateTaskStatus(task: AegisTask, newStatus: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val updated = task.copy(status = newStatus)
-            dao.updateTask(updated)
+            repository.updateTask(updated)
             _sessionMemory.value = _sessionMemory.value.copy(
                 organizerLastAction = "updated",
                 taskStatus = newStatus
@@ -218,7 +275,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteTask(taskId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.deleteTask(taskId)
+            repository.deleteTask(taskId)
             _sessionMemory.value = _sessionMemory.value.copy(organizerLastAction = "deleted")
         }
     }
@@ -232,25 +289,29 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 actionTaken = "Updated active security policy to $newMode",
                 severity = "LOW"
             )
-            dao.insertSecurityEvent(event)
+            repository.saveSecurityEvent(event)
         }
     }
 
     fun clearLogs() {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.clearLogs()
+            repository.clearLogs()
+            repository.clearAllMessages()
+            repository.clearAllChatSessions()
         }
     }
 
     fun clearSecurityEvents() {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.clearSecurityEvents()
+            repository.clearSecurityEvents()
         }
     }
 
     fun clearActiveSessionContext() {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.clearLogs()
+            repository.clearLogs()
+            repository.clearAllMessages()
+            repository.clearAllChatSessions()
             _sessionMemory.value = AegisSessionMemory(
                 sessionId = java.util.UUID.randomUUID().toString(),
                 securityMode = _sessionMemory.value.securityMode,
@@ -264,7 +325,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 actionTaken = "App locked and active session context cleared automatically",
                 severity = "MEDIUM"
             )
-            dao.insertSecurityEvent(event)
+            repository.saveSecurityEvent(event)
         }
     }
 
@@ -282,7 +343,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                     actionTaken = "Scrubbed ${result.totalScrubbedMatches} PII matches & saved AES-256 encrypted file: ${result.filePath}",
                     severity = "LOW"
                 )
-                dao.insertSecurityEvent(event)
+                repository.saveSecurityEvent(event)
             }
             kotlinx.coroutines.withContext(Dispatchers.Main) {
                 onResult(result)

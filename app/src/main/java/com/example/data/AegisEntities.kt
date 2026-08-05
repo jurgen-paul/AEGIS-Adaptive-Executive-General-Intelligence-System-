@@ -54,3 +54,31 @@ data class SalesNote(
     val content: String,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "aegis_chat_sessions")
+data class ChatSessionEntity(
+    @PrimaryKey val sessionId: String,
+    val title: String,
+    val activeDomain: String = "conversation",
+    val securityMode: String = "strict",
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastUpdatedAt: Long = System.currentTimeMillis(),
+    val messageCount: Int = 0,
+    val isArchived: Boolean = false
+)
+
+@Entity(
+    tableName = "aegis_chat_messages",
+    indices = [androidx.room.Index("sessionId")]
+)
+data class ChatMessageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val sessionId: String,
+    val sender: String, // "user" or "assistant"
+    val content: String,
+    val domain: String = "conversation",
+    val confidenceScore: Float = 0.95f,
+    val securityThreatFlag: Boolean = false,
+    val healthEmergencyFlag: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)

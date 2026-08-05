@@ -11,9 +11,11 @@ import androidx.room.RoomDatabase
         AegisTask::class,
         AegisSecurityEvent::class,
         HealthHistoryDisclaimer::class,
-        SalesNote::class
+        SalesNote::class,
+        ChatSessionEntity::class,
+        ChatMessageEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AegisDatabase : RoomDatabase() {
