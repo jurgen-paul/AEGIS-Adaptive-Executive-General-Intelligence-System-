@@ -141,8 +141,10 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun executePrompt(query: String, routerResult: com.example.router.AegisRouterResult) {
         var finalResponse = routerResult.responseText
 
-        // If query passed security check and internet/API is available, attempt Gemini call
-        if (!routerResult.securityThreatFlag && routerResult.domain != TaskDomain.HEALTH) {
+        val isPlayStoreQuery = listOf("apk", "aab", "bundle", "playstore", "play store", "install", "keystore", "release", "deployment", "google apk").any { query.lowercase().contains(it) }
+
+        // If query passed security check and internet/API is available, attempt Gemini call (unless it's an authoritative deployment guide)
+        if (!routerResult.securityThreatFlag && routerResult.domain != TaskDomain.HEALTH && !isPlayStoreQuery) {
             val systemPrompt = """
                 You are AEGIS (Adaptive Executive & General Intelligence System).
                 Role: Security-first, highly intelligent executive assistant.

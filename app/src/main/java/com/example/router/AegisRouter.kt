@@ -57,8 +57,8 @@ class AegisRouter {
             return TaskDomain.HEALTH
         }
 
-        // Security queries
-        if (listOf("security", "threat", "vulnerability", "prompt injection", "privacy", "audit", "encrypt", "firewall", "shield").any { lowered.contains(it) }) {
+        // Security & Play Store APK/AAB deployment queries
+        if (listOf("security", "threat", "vulnerability", "prompt injection", "privacy", "audit", "encrypt", "firewall", "shield", "apk", "aab", "bundle", "playstore", "play store", "install", "keystore", "release", "deployment", "google apk").any { lowered.contains(it) }) {
             return TaskDomain.SECURITY
         }
 
@@ -184,6 +184,36 @@ class AegisRouter {
     }
 
     private fun handleSecurity(text: String): String {
+        val lowered = text.lowercase()
+        if (listOf("apk", "aab", "bundle", "playstore", "play store", "install", "keystore", "release", "deployment", "google apk").any { lowered.contains(it) }) {
+            return """
+                📦 AEGIS Google Play Store (AAB / APK) Deployment Guide:
+                =======================================================
+                Status: Pre-Configured CI/CD Release Pipeline Operational
+                
+                1️⃣ BUILD PLAY STORE APP BUNDLE (.AAB) VIA GITHUB ACTIONS:
+                   • Workflow File: `.github/workflows/build-aab.yml`
+                   • Gradle Command: `./gradlew :app:bundleRelease`
+                   • Repository Secrets required in GitHub > Settings > Secrets:
+                     - KEYSTORE_BASE64 (optional base64-encoded upload keystore .jks)
+                     - STORE_PASSWORD (keystore password)
+                     - KEY_PASSWORD (key alias password)
+                   • Artifact Output: Download `app-bundle-release` artifact (`.aab` file ready for Play Store Console upload).
+
+                2️⃣ BUILD & INSTALL RELEASE APK ON ANDROID DEVICE:
+                   • Local Release APK Build:
+                     `./gradlew :app:assembleRelease`
+                   • ADB Installation Command:
+                     `adb install -r app/build/outputs/apk/release/app-release.apk`
+                   • Device Installation Note: Ensure "Install unknown apps" permission is enabled if installing APK directly.
+
+                3️⃣ LOCAL KEYSTORE GENERATION COMMAND:
+                   `keytool -genkeypair -alias upload -keyalg RSA -keysize 2048 -validity 10000 -keystore my-upload-key.jks -storepass <STORE_PASSWORD> -keypass <KEY_PASSWORD>`
+
+                ⚡ See BUILDING_AAB.md in the repository root for step-by-step Play Store Release instructions.
+            """.trimIndent()
+        }
+
         return """
             🛡️ AEGIS Security Shield Analysis:
             ----------------------------------

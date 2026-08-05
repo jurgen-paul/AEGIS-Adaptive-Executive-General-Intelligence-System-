@@ -194,7 +194,8 @@ fun AegisMainApp(
                         sessionMemory = sessionMemory,
                         threatCount = securityEvents.size,
                         onShieldClick = { viewModel.switchTab(2) },
-                        onMemoryClick = { viewModel.switchTab(3) }
+                        onMemoryClick = { viewModel.switchTab(3) },
+                        onLockClick = { isAppUnlocked = false }
                     )
 
                     SecurityAlertBanner(

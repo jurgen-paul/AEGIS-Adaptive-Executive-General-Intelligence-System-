@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -173,6 +174,57 @@ fun ChatScreen(
                             color = SleekTextPrimary
                         )
                     }
+                }
+            }
+        }
+
+        // Play Store (AAB) & APK Ready Banner
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onSendMessage("INSTALL GOOGLE APK BUNDLE ,PLAYSTORE CHATBOT-INTERFACE") },
+            color = SleekPrimaryContainer,
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SleekPrimary.copy(alpha = 0.4f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📦", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Play Store (.AAB) & APK Ready",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SleekPrimary
+                        )
+                        Text(
+                            text = "CI/CD Pipeline Operational • Tap for deploy guide",
+                            fontSize = 10.sp,
+                            color = SleekTextSecondary
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SleekPrimary.copy(alpha = 0.2f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "VIEW GUIDE",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SleekPrimary
+                    )
                 }
             }
         }
