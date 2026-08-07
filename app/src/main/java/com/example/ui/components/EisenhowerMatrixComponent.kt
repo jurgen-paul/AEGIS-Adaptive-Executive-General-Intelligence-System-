@@ -4,53 +4,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Grid3x3
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.PriorityHigh
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,19 +33,19 @@ enum class EisenhowerQuadrant(
     val icon: ImageVector,
     val tag: String
 ) {
-    DO_FIRST(
-        title = "DO FIRST",
+    DO(
+        title = "DO",
         subtitle = "Urgent & Important",
-        actionLabel = "Immediate Execution",
+        actionLabel = "Do Immediately",
         isUrgent = true,
         isImportant = true,
         icon = Icons.Default.PriorityHigh,
-        tag = "do_first"
+        tag = "do"
     ),
     SCHEDULE(
         title = "SCHEDULE",
         subtitle = "Not Urgent & Important",
-        actionLabel = "Strategic Planning",
+        actionLabel = "Schedule for Later",
         isUrgent = false,
         isImportant = true,
         icon = Icons.Default.Schedule,
@@ -94,34 +54,41 @@ enum class EisenhowerQuadrant(
     DELEGATE(
         title = "DELEGATE",
         subtitle = "Urgent & Not Important",
-        actionLabel = "Quick Hand-off",
+        actionLabel = "Delegate to Team",
         isUrgent = true,
         isImportant = false,
         icon = Icons.Default.Group,
         tag = "delegate"
     ),
-    ROUTINE(
-        title = "ROUTINE",
+    DELETE(
+        title = "DELETE",
         subtitle = "Not Urgent & Not Important",
-        actionLabel = "Maintenance & Low Priority",
+        actionLabel = "Eliminate & Purge",
         isUrgent = false,
         isImportant = false,
-        icon = Icons.Default.Repeat,
-        tag = "routine"
+        icon = Icons.Default.Delete,
+        tag = "delete"
     );
 
+    // Backward compatibility getters
     companion object {
+        val DO_FIRST get() = DO
+        val ROUTINE get() = DELETE
+
         fun fromTask(task: AegisTask): EisenhowerQuadrant {
             return when {
-                task.isUrgent && task.isImportant -> DO_FIRST
+                task.isUrgent && task.isImportant -> DO
                 !task.isUrgent && task.isImportant -> SCHEDULE
                 task.isUrgent && !task.isImportant -> DELEGATE
-                else -> ROUTINE
+                else -> DELETE
             }
         }
     }
 }
 
+/**
+ * Material3 Dashboard Component that categorizes tasks into an Eisenhower Priority Matrix (Do, Schedule, Delegate, Delete).
+ */
 @Composable
 fun EisenhowerMatrixComponent(
     tasks: List<AegisTask>,
@@ -133,15 +100,17 @@ fun EisenhowerMatrixComponent(
 ) {
     var selectedQuadrantFilter by remember { mutableStateOf<EisenhowerQuadrant?>(null) }
     var showAddTaskDialog by remember { mutableStateOf(false) }
-    var initialQuadrantForNewTask by remember { mutableStateOf(EisenhowerQuadrant.DO_FIRST) }
+    var initialQuadrantForNewTask by remember { mutableStateOf(EisenhowerQuadrant.DO) }
 
-    val doFirstTasks = tasks.filter { it.isUrgent && it.isImportant }
+    val doTasks = tasks.filter { it.isUrgent && it.isImportant }
     val scheduleTasks = tasks.filter { !it.isUrgent && it.isImportant }
     val delegateTasks = tasks.filter { it.isUrgent && !it.isImportant }
-    val routineTasks = tasks.filter { !it.isUrgent && !it.isImportant }
+    val deleteTasks = tasks.filter { !it.isUrgent && !it.isImportant }
 
+    val totalTasks = tasks.size
     val completedCount = tasks.count { it.status == "completed" }
-    val pendingCount = tasks.size - completedCount
+    val pendingCount = totalTasks - completedCount
+    val urgentCount = tasks.count { it.isUrgent }
 
     Card(
         modifier = modifier
@@ -159,7 +128,7 @@ fun EisenhowerMatrixComponent(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Matrix Header
+            // Dashboard Header & Overview Stats
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -167,20 +136,20 @@ fun EisenhowerMatrixComponent(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Grid3x3,
-                            contentDescription = "Eisenhower Matrix Icon",
+                            contentDescription = "Eisenhower Matrix Grid",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
@@ -188,12 +157,12 @@ fun EisenhowerMatrixComponent(
                         Text(
                             text = "EISENHOWER PRIORITY MATRIX",
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary,
                             letterSpacing = 0.8.sp
                         )
                         Text(
-                            text = "Triage: $pendingCount pending • $completedCount completed",
+                            text = "Dashboard Matrix • $pendingCount Pending • $completedCount Done",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -205,13 +174,13 @@ fun EisenhowerMatrixComponent(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .clickable {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.DO_FIRST
+                            initialQuadrantForNewTask = EisenhowerQuadrant.DO
                             showAddTaskDialog = true
                         }
                         .testTag("add_matrix_task_button")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -222,7 +191,7 @@ fun EisenhowerMatrixComponent(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Add Task",
+                            text = "New Task",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
@@ -233,34 +202,84 @@ fun EisenhowerMatrixComponent(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
-            // 2x2 Quadrant Grid Summary Cards
+            // Quick Filter Bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (selectedQuadrantFilter == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.clickable { selectedQuadrantFilter = null }
+                ) {
+                    Text(
+                        text = "All ($totalTasks)",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedQuadrantFilter == null) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+
+                EisenhowerQuadrant.values().forEach { quad ->
+                    val isSelected = selectedQuadrantFilter == quad
+                    val qColor = getQuadrantColor(quad)
+                    val qCount = when (quad) {
+                        EisenhowerQuadrant.DO -> doTasks.size
+                        EisenhowerQuadrant.SCHEDULE -> scheduleTasks.size
+                        EisenhowerQuadrant.DELEGATE -> delegateTasks.size
+                        EisenhowerQuadrant.DELETE -> deleteTasks.size
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = if (isSelected) qColor else qColor.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, qColor.copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .clickable {
+                                selectedQuadrantFilter = if (selectedQuadrantFilter == quad) null else quad
+                            }
+                            .testTag("filter_chip_${quad.tag}")
+                    ) {
+                        Text(
+                            text = "${quad.title} ($qCount)",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) Color.White else qColor,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            // Material3 Grid Layout (2x2 Matrix Quadrants)
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // Top Row: DO FIRST & SCHEDULE
+                // Row 1: DO & SCHEDULE
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    QuadrantSummaryCard(
-                        quadrant = EisenhowerQuadrant.DO_FIRST,
-                        taskCount = doFirstTasks.size,
-                        pendingCount = doFirstTasks.count { it.status != "completed" },
-                        color = Color(0xFFEF5350), // Red
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DO_FIRST,
+                    QuadrantGridCard(
+                        quadrant = EisenhowerQuadrant.DO,
+                        taskList = doTasks,
+                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DO,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.DO_FIRST) null else EisenhowerQuadrant.DO_FIRST
+                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.DO) null else EisenhowerQuadrant.DO
                         },
                         onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.DO_FIRST
+                            initialQuadrantForNewTask = EisenhowerQuadrant.DO
                             showAddTaskDialog = true
-                        }
+                        },
+                        onUpdateStatus = onUpdateStatus,
+                        onUpdatePriority = onUpdatePriority,
+                        onDeleteTask = onDeleteTask
                     )
 
-                    QuadrantSummaryCard(
+                    QuadrantGridCard(
                         quadrant = EisenhowerQuadrant.SCHEDULE,
-                        taskCount = scheduleTasks.size,
-                        pendingCount = scheduleTasks.count { it.status != "completed" },
-                        color = MaterialTheme.colorScheme.primary, // Blue/Cyan
+                        taskList = scheduleTasks,
                         isSelected = selectedQuadrantFilter == EisenhowerQuadrant.SCHEDULE,
                         modifier = Modifier.weight(1f),
                         onClick = {
@@ -269,20 +288,21 @@ fun EisenhowerMatrixComponent(
                         onQuickAdd = {
                             initialQuadrantForNewTask = EisenhowerQuadrant.SCHEDULE
                             showAddTaskDialog = true
-                        }
+                        },
+                        onUpdateStatus = onUpdateStatus,
+                        onUpdatePriority = onUpdatePriority,
+                        onDeleteTask = onDeleteTask
                     )
                 }
 
-                // Bottom Row: DELEGATE & ROUTINE
+                // Row 2: DELEGATE & DELETE
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    QuadrantSummaryCard(
+                    QuadrantGridCard(
                         quadrant = EisenhowerQuadrant.DELEGATE,
-                        taskCount = delegateTasks.size,
-                        pendingCount = delegateTasks.count { it.status != "completed" },
-                        color = Color(0xFFFF9800), // Orange
+                        taskList = delegateTasks,
                         isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DELEGATE,
                         modifier = Modifier.weight(1f),
                         onClick = {
@@ -291,109 +311,100 @@ fun EisenhowerMatrixComponent(
                         onQuickAdd = {
                             initialQuadrantForNewTask = EisenhowerQuadrant.DELEGATE
                             showAddTaskDialog = true
-                        }
+                        },
+                        onUpdateStatus = onUpdateStatus,
+                        onUpdatePriority = onUpdatePriority,
+                        onDeleteTask = onDeleteTask
                     )
 
-                    QuadrantSummaryCard(
-                        quadrant = EisenhowerQuadrant.ROUTINE,
-                        taskCount = routineTasks.size,
-                        pendingCount = routineTasks.count { it.status != "completed" },
-                        color = Color(0xFF66BB6A), // Green
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.ROUTINE,
+                    QuadrantGridCard(
+                        quadrant = EisenhowerQuadrant.DELETE,
+                        taskList = deleteTasks,
+                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DELETE,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.ROUTINE) null else EisenhowerQuadrant.ROUTINE
+                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.DELETE) null else EisenhowerQuadrant.DELETE
                         },
                         onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.ROUTINE
+                            initialQuadrantForNewTask = EisenhowerQuadrant.DELETE
                             showAddTaskDialog = true
-                        }
+                        },
+                        onUpdateStatus = onUpdateStatus,
+                        onUpdatePriority = onUpdatePriority,
+                        onDeleteTask = onDeleteTask
                     )
                 }
             }
 
-            // Quadrant Detail / Task List View
+            // Expanded Quadrant Details / Selected View
             val displayTasks = when (selectedQuadrantFilter) {
-                EisenhowerQuadrant.DO_FIRST -> doFirstTasks
+                EisenhowerQuadrant.DO -> doTasks
                 EisenhowerQuadrant.SCHEDULE -> scheduleTasks
                 EisenhowerQuadrant.DELEGATE -> delegateTasks
-                EisenhowerQuadrant.ROUTINE -> routineTasks
+                EisenhowerQuadrant.DELETE -> deleteTasks
                 null -> tasks
             }
 
-            val activeFilter = selectedQuadrantFilter
+            if (selectedQuadrantFilter != null) {
+                val activeQuad = selectedQuadrantFilter!!
+                val quadColor = getQuadrantColor(activeQuad)
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        RoundedCornerShape(16.dp)
-                    )
-                    .padding(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (activeFilter != null) "${activeFilter.title} TASKS (${displayTasks.size})" else "ALL QUADRANT TASKS (${tasks.size})",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        letterSpacing = 0.5.sp
-                    )
-
-                    if (activeFilter != null) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier.clickable { selectedQuadrantFilter = null }
-                        ) {
-                            Text(
-                                text = "Show All",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (displayTasks.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No tasks categorized in this quadrant yet.",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            quadColor.copy(alpha = 0.08f),
+                            RoundedCornerShape(16.dp)
                         )
-                    }
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        displayTasks.take(6).forEach { task ->
-                            MatrixTaskItemRow(
-                                task = task,
-                                onUpdateStatus = onUpdateStatus,
-                                onUpdatePriority = onUpdatePriority,
-                                onDeleteTask = onDeleteTask
+                        .border(1.dp, quadColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = activeQuad.icon,
+                                contentDescription = null,
+                                tint = quadColor,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "${activeQuad.title} QUADRANT TASKS (${displayTasks.size})",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = quadColor,
+                                letterSpacing = 0.5.sp
                             )
                         }
-                        if (displayTasks.size > 6) {
-                            Text(
-                                text = "+ ${displayTasks.size - 6} more tasks in matrix...",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
+
+                        TextButton(onClick = { selectedQuadrantFilter = null }) {
+                            Text("Clear Filter", fontSize = 10.sp, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    if (displayTasks.isEmpty()) {
+                        Text(
+                            text = "No tasks categorized under '${activeQuad.title}' (${activeQuad.subtitle}).",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            displayTasks.forEach { task ->
+                                MatrixTaskItemRow(
+                                    task = task,
+                                    onUpdateStatus = onUpdateStatus,
+                                    onUpdatePriority = onUpdatePriority,
+                                    onDeleteTask = onDeleteTask
+                                )
+                            }
                         }
                     }
                 }
@@ -415,34 +426,41 @@ fun EisenhowerMatrixComponent(
 }
 
 @Composable
-private fun QuadrantSummaryCard(
+private fun QuadrantGridCard(
     quadrant: EisenhowerQuadrant,
-    taskCount: Int,
-    pendingCount: Int,
-    color: Color,
+    taskList: List<AegisTask>,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    onQuickAdd: () -> Unit
+    onQuickAdd: () -> Unit,
+    onUpdateStatus: (task: AegisTask, newStatus: String) -> Unit,
+    onUpdatePriority: (task: AegisTask, isUrgent: Boolean, isImportant: Boolean) -> Unit,
+    onDeleteTask: ((taskId: Long) -> Unit)?
 ) {
+    val qColor = getQuadrantColor(quadrant)
+    val completedCount = taskList.count { it.status == "completed" }
+    val pendingCount = taskList.size - completedCount
+    val progress = if (taskList.isNotEmpty()) completedCount.toFloat() / taskList.size else 0f
+
     Card(
         modifier = modifier
             .testTag("quadrant_${quadrant.tag}_card")
             .clickable { onClick() }
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) color else color.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp)
+                color = if (isSelected) qColor else qColor.copy(alpha = 0.35f),
+                shape = RoundedCornerShape(18.dp)
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) color.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) qColor.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            // Header: Icon, Title & Add Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -454,32 +472,32 @@ private fun QuadrantSummaryCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(26.dp)
                             .clip(CircleShape)
-                            .background(color.copy(alpha = 0.2f)),
+                            .background(qColor.copy(alpha = 0.22f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = quadrant.icon,
                             contentDescription = quadrant.title,
-                            tint = color,
-                            modifier = Modifier.size(14.dp)
+                            tint = qColor,
+                            modifier = Modifier.size(15.dp)
                         )
                     }
 
                     Text(
                         text = quadrant.title,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = color
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = qColor
                     )
                 }
 
                 Box(
                     modifier = Modifier
-                        .size(22.dp)
+                        .size(24.dp)
                         .clip(CircleShape)
-                        .background(color)
+                        .background(qColor)
                         .clickable { onQuickAdd() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -487,7 +505,7 @@ private fun QuadrantSummaryCard(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Quick Add to ${quadrant.title}",
                         tint = Color.White,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             }
@@ -499,24 +517,59 @@ private fun QuadrantSummaryCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            // Progress Indicator Bar
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = qColor,
+                trackColor = qColor.copy(alpha = 0.18f)
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "$pendingCount active / $taskCount total",
-                    fontSize = 11.sp,
+                    text = "$pendingCount active / ${taskList.size} total",
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = if (isSelected) "Filtered" else "View",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isSelected) color else MaterialTheme.colorScheme.onSurfaceVariant
+                    text = quadrant.actionLabel,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = qColor
                 )
+            }
+
+            // List Preview inside Quadrant Card
+            if (taskList.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    taskList.take(3).forEach { task ->
+                        MatrixTaskItemRow(
+                            task = task,
+                            onUpdateStatus = onUpdateStatus,
+                            onUpdatePriority = onUpdatePriority,
+                            onDeleteTask = onDeleteTask
+                        )
+                    }
+                    if (taskList.size > 3) {
+                        Text(
+                            text = "+ ${taskList.size - 3} more",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = qColor,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -532,29 +585,23 @@ private fun MatrixTaskItemRow(
     var showQuadrantMenu by remember { mutableStateOf(false) }
     val isCompleted = task.status == "completed"
     val currentQuadrant = EisenhowerQuadrant.fromTask(task)
-
-    val quadrantColor = when (currentQuadrant) {
-        EisenhowerQuadrant.DO_FIRST -> Color(0xFFEF5350)
-        EisenhowerQuadrant.SCHEDULE -> MaterialTheme.colorScheme.primary
-        EisenhowerQuadrant.DELEGATE -> Color(0xFFFF9800)
-        EisenhowerQuadrant.ROUTINE -> Color(0xFF66BB6A)
-    }
+    val quadrantColor = getQuadrantColor(currentQuadrant)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("matrix_task_item_${task.id}")
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .border(
                 1.dp,
                 if (isCompleted) MaterialTheme.colorScheme.outline.copy(alpha = 0.2f) else quadrantColor.copy(alpha = 0.3f),
-                RoundedCornerShape(12.dp)
+                RoundedCornerShape(10.dp)
             ),
         color = MaterialTheme.colorScheme.surface
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .padding(horizontal = 8.dp, vertical = 6.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -562,75 +609,65 @@ private fun MatrixTaskItemRow(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 IconButton(
                     onClick = {
                         val nextStatus = if (isCompleted) "pending" else "completed"
                         onUpdateStatus(task, nextStatus)
                     },
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 ) {
                     Icon(
                         imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                         contentDescription = "Toggle Complete",
                         tint = if (isCompleted) Color(0xFF66BB6A) else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = task.title,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                         textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-
-                    if (task.description.isNotBlank()) {
-                        Text(
-                            text = task.description,
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 // Quadrant Selector Pill
                 Box {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(6.dp),
                         color = quadrantColor.copy(alpha = 0.15f),
                         modifier = Modifier
                             .clickable { showQuadrantMenu = true }
                             .testTag("task_quadrant_pill_${task.id}")
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Text(
                                 text = currentQuadrant.title,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.ExtraBold,
                                 color = quadrantColor
                             )
                             Icon(
                                 imageVector = Icons.Default.ExpandMore,
                                 contentDescription = "Move Quadrant",
                                 tint = quadrantColor,
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(10.dp)
                             )
                         }
                     }
@@ -660,13 +697,13 @@ private fun MatrixTaskItemRow(
                 if (onDeleteTask != null) {
                     IconButton(
                         onClick = { onDeleteTask(task.id) },
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete Task",
                             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(13.dp)
                         )
                     }
                 }
@@ -719,7 +756,7 @@ private fun AddMatrixTaskDialog(
                 )
 
                 Text(
-                    text = "Select Eisenhower Quadrant:",
+                    text = "Categorize in Eisenhower Matrix:",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -728,22 +765,17 @@ private fun AddMatrixTaskDialog(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     EisenhowerQuadrant.values().forEach { quad ->
                         val isSelected = selectedQuadrant == quad
-                        val color = when (quad) {
-                            EisenhowerQuadrant.DO_FIRST -> Color(0xFFEF5350)
-                            EisenhowerQuadrant.SCHEDULE -> MaterialTheme.colorScheme.primary
-                            EisenhowerQuadrant.DELEGATE -> Color(0xFFFF9800)
-                            EisenhowerQuadrant.ROUTINE -> Color(0xFF66BB6A)
-                        }
+                        val qColor = getQuadrantColor(quad)
 
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) color.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
+                            color = if (isSelected) qColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { selectedQuadrant = quad }
                                 .border(
                                     width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) color else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                    color = if (isSelected) qColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                     shape = RoundedCornerShape(10.dp)
                                 )
                         ) {
@@ -759,7 +791,7 @@ private fun AddMatrixTaskDialog(
                                     Icon(
                                         imageVector = quad.icon,
                                         contentDescription = null,
-                                        tint = color,
+                                        tint = qColor,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Column {
@@ -767,7 +799,7 @@ private fun AddMatrixTaskDialog(
                                             text = quad.title,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = color
+                                            color = qColor
                                         )
                                         Text(
                                             text = quad.subtitle,
@@ -781,7 +813,7 @@ private fun AddMatrixTaskDialog(
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = "Selected",
-                                        tint = color,
+                                        tint = qColor,
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
@@ -816,4 +848,13 @@ private fun AddMatrixTaskDialog(
             }
         }
     )
+}
+
+private fun getQuadrantColor(quadrant: EisenhowerQuadrant): Color {
+    return when (quadrant) {
+        EisenhowerQuadrant.DO -> Color(0xFFEF5350)       // Red / Crimson
+        EisenhowerQuadrant.SCHEDULE -> Color(0xFF2196F3) // Strategic Blue
+        EisenhowerQuadrant.DELEGATE -> Color(0xFFFF9800) // Executive Amber
+        EisenhowerQuadrant.DELETE -> Color(0xFF78909C)   // Slate Gray / Muted
+    }
 }

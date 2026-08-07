@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -155,6 +158,29 @@ fun AegisMainApp(
                 }
             }
     ) {
+        // App Aegis Shield Background Image
+        Image(
+            painter = painterResource(id = R.drawable.aegis_shield_bg),
+            contentDescription = "AEGIS Background Shield",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Dark Atmospheric Scrim Gradient overlay to ensure text contrast
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.88f),
+                            Color(0xFF0B0F17).copy(alpha = 0.82f),
+                            Color.Black.copy(alpha = 0.92f)
+                        )
+                    )
+                )
+        )
+
         val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
         val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
         val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -204,6 +230,7 @@ fun AegisMainApp(
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
             topBar = {
                 Column {
                     AegisTopAppBar(
@@ -235,7 +262,7 @@ fun AegisMainApp(
                             .background(androidx.compose.material3.MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     )
                     NavigationBar(
-                        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                        containerColor = Color(0xDD0B0F17),
                         contentColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
                         tonalElevation = 0.dp,
                         modifier = Modifier.testTag("aegis_bottom_navigation")

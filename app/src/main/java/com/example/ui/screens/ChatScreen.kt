@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.AegisSessionLog
 import com.example.ui.components.ChatBubble
 import com.example.ui.components.HealthDisclaimerBanner
+import com.example.ui.components.LiveHealthDisclaimerDetector
 import com.example.ui.components.isHealthQueryIntent
 import com.example.ui.theme.SleekBackground
 import com.example.ui.theme.SleekBorder
@@ -312,6 +313,12 @@ fun ChatScreen(
                 )
             }
         }
+
+        // Live Health Disclaimer Auto-Detector while typing medical queries
+        LiveHealthDisclaimerDetector(
+            currentInputText = inputText,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
 
         // Bottom Input Text Field & Action Button
         Surface(

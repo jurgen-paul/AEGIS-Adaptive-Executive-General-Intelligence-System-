@@ -56,6 +56,7 @@ import com.example.data.AegisSecurityEvent
 import com.example.data.AegisSessionMemory
 import com.example.router.AegisRouter
 import com.example.service.BiometricAuthManager
+import com.example.ui.components.GoogleSheetsFormComponent
 import com.example.ui.theme.SleekBackground
 import com.example.ui.theme.SleekBorder
 import com.example.ui.theme.SleekCardBg
@@ -493,6 +494,11 @@ fun SecurityShieldScreen(
                     }
                 }
             }
+        }
+
+        // Google Sheets & Forms Integration Section
+        item {
+            GoogleSheetsFormComponent()
         }
 
         // Security Audit Logs Header & Clear Button

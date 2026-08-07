@@ -70,6 +70,11 @@ import com.example.ui.theme.SleekTextSecondary
 import com.example.ui.theme.SleekThreatRed
 import kotlinx.coroutines.delay
 
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.R
+
 @Composable
 fun AegisLockScreen(
     onUnlocked: () -> Unit,
@@ -142,11 +147,38 @@ fun AegisLockScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(glassBgGradient)
-            .padding(24.dp)
             .testTag("aegis_lock_screen"),
         contentAlignment = Alignment.Center
     ) {
+        // Aegis Bronze Shield & Torches Background Image
+        Image(
+            painter = painterResource(id = R.drawable.aegis_shield_bg),
+            contentDescription = "AEGIS Guardian Shield",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Dark Glass Scrim Overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.75f),
+                            Color(0xFF0F172A).copy(alpha = 0.85f),
+                            Color.Black.copy(alpha = 0.90f)
+                        )
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
         // Decorative background glowing refraction spheres
         Box(
             modifier = Modifier
@@ -395,6 +427,7 @@ fun AegisLockScreen(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                     )
                 }
+            }
             }
         }
     }
