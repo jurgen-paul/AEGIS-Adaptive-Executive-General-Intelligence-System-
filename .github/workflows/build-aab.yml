@@ -68,7 +68,7 @@ jobs:
           KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-bundle-release
           path: app/build/outputs/bundle/release/*.aab
