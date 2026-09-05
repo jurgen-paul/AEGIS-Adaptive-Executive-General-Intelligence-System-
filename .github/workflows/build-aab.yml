@@ -17,7 +17,7 @@ jobs:
       # set KEYSTORE_BASE64 to the base64 string of your upload keystore.
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Decode upload keystore (if provided)
         if: ${{ secrets.KEYSTORE_BASE64 != '' }}
