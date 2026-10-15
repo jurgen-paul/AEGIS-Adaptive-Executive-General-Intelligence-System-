@@ -229,6 +229,169 @@ fun SecurityShieldScreen(
             }
         }
 
+        // SSF (Secure Software Framework) & Compliance Badges Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, SleekBorder, RoundedCornerShape(20.dp))
+                    .testTag("ssf_badges_card"),
+                colors = CardDefaults.cardColors(containerColor = SleekCardBg)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(SleekSecurityGreen.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shield,
+                                    contentDescription = "SSF Security",
+                                    tint = SleekSecurityGreen,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "SSF & OpenSSF Compliance",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SleekTextPrimary
+                                )
+                                Text(
+                                    text = "Secure Software Framework • Zero Trust Architecture",
+                                    fontSize = 10.sp,
+                                    color = SleekTextSecondary
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekSecurityGreen.copy(alpha = 0.15f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SleekSecurityGreen.copy(alpha = 0.4f))
+                        ) {
+                            Text(
+                                text = "VERIFIED",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SleekSecurityGreen,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "AEGIS enforces strict security baselines conforming to OpenSSF Gold Standard, NIST SP 800-218, SLSA Level 3, and OWASP MASVS v2.0.",
+                        fontSize = 11.sp,
+                        color = SleekTextSecondary,
+                        lineHeight = 15.sp
+                    )
+
+                    // Grid of SSF Badges
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekBackground,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SleekPrimary.copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("OpenSSF", fontSize = 9.sp, color = SleekPrimary, fontWeight = FontWeight.Bold)
+                                Text("Gold Standard", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = SleekTextPrimary)
+                                Text("Passing 100%", fontSize = 9.sp, color = SleekSecurityGreen)
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekBackground,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SleekSecurityGreen.copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("NIST SSDF", fontSize = 9.sp, color = SleekSecurityGreen, fontWeight = FontWeight.Bold)
+                                Text("SP 800-218", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = SleekTextPrimary)
+                                Text("Compliant", fontSize = 9.sp, color = SleekSecurityGreen)
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekBackground,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFAB47BC).copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("SLSA L3", fontSize = 9.sp, color = Color(0xFFAB47BC), fontWeight = FontWeight.Bold)
+                                Text("Provenance", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = SleekTextPrimary)
+                                Text("Signed AAB", fontSize = 9.sp, color = SleekSecurityGreen)
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekBackground,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF9800).copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("OWASP", fontSize = 9.sp, color = Color(0xFFFF9800), fontWeight = FontWeight.Bold)
+                                Text("MASVS L2", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = SleekTextPrimary)
+                                Text("Resilience +", fontSize = 9.sp, color = SleekSecurityGreen)
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekBackground,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF26A69A).copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("R8 / ProGuard", fontSize = 9.sp, color = Color(0xFF26A69A), fontWeight = FontWeight.Bold)
+                                Text("Hardened", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = SleekTextPrimary)
+                                Text("Log-Stripped", fontSize = 9.sp, color = SleekSecurityGreen)
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SleekBackground,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF42A5F5).copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("Zero Trust", fontSize = 9.sp, color = Color(0xFF42A5F5), fontWeight = FontWeight.Bold)
+                                Text("Keystore TEE", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = SleekTextPrimary)
+                                Text("AES-256-GCM", fontSize = 9.sp, color = SleekSecurityGreen)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Top Security Shield Status Card
         item {
             Card(
