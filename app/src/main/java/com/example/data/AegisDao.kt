@@ -35,6 +35,12 @@ interface AegisDao {
     @Query("DELETE FROM aegis_tasks WHERE id = :taskId")
     suspend fun deleteTask(taskId: Long)
 
+    @Query("DELETE FROM aegis_tasks WHERE status = 'completed'")
+    suspend fun deleteCompletedTasks()
+
+    @Query("DELETE FROM aegis_tasks")
+    suspend fun clearAllTasks()
+
     // Security Audit Events
     @Query("SELECT * FROM aegis_security_events ORDER BY timestamp DESC")
     fun getAllSecurityEvents(): Flow<List<AegisSecurityEvent>>

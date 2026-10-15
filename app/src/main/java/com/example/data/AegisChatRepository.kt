@@ -55,6 +55,14 @@ class AegisChatRepository(private val dao: AegisDao) {
         dao.deleteTask(taskId)
     }
 
+    suspend fun deleteCompletedTasks() {
+        dao.deleteCompletedTasks()
+    }
+
+    suspend fun clearAllTasks() {
+        dao.clearAllTasks()
+    }
+
     suspend fun getTaskCount(): Int {
         return dao.getTaskCount()
     }

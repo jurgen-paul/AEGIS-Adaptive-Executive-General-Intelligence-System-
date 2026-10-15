@@ -370,6 +370,12 @@ fun AegisMainApp(
                         },
                         onUpdatePriority = { task, urgent, important ->
                             viewModel.updateTaskPriority(task, urgent, important)
+                        },
+                        onClearCompleted = {
+                            viewModel.clearCompletedTasks()
+                        },
+                        onSeedTemplates = {
+                            viewModel.seedExecutiveTasks()
                         }
                     )
                     2 -> SecurityShieldScreen(

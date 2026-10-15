@@ -390,6 +390,54 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun clearCompletedTasks() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteCompletedTasks()
+            _sessionMemory.value = _sessionMemory.value.copy(organizerLastAction = "cleared_completed")
+        }
+    }
+
+    fun seedExecutiveTasks() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val templates = listOf(
+                AegisTask(
+                    title = "Patch Critical TLS / Cipher Suite Vulnerability",
+                    description = "Deploy cipher suite policy and rotate master key in Android Keystore.",
+                    category = "security",
+                    isUrgent = true,
+                    isImportant = true,
+                    status = "pending"
+                ),
+                AegisTask(
+                    title = "Executive Q4 Strategic Architecture Review",
+                    description = "Refine multi-agent router heuristics and Room database schema migration.",
+                    category = "organizer",
+                    isUrgent = false,
+                    isImportant = true,
+                    status = "in_progress"
+                ),
+                AegisTask(
+                    title = "Vendor License Renewal Follow-Up",
+                    description = "Delegate procurement approval and cloud compute quota review to DevOps.",
+                    category = "sales",
+                    isUrgent = true,
+                    isImportant = false,
+                    status = "pending"
+                ),
+                AegisTask(
+                    title = "Purge Deprecated Development Cache Logs",
+                    description = "Eliminate stale test session logs and temporary export files.",
+                    category = "general",
+                    isUrgent = false,
+                    isImportant = false,
+                    status = "completed"
+                )
+            )
+            templates.forEach { repository.saveTask(it) }
+            _sessionMemory.value = _sessionMemory.value.copy(organizerLastAction = "seeded_templates")
+        }
+    }
+
     fun toggleSecurityMode(newMode: String) {
         _sessionMemory.value = _sessionMemory.value.copy(securityMode = newMode)
         viewModelScope.launch(Dispatchers.IO) {

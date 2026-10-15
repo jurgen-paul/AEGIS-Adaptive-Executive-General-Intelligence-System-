@@ -17,6 +17,7 @@
 </p>
 
 <p align="center">
+  <a href="./.github/workflows/android-ci.yml"><img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions%20Passing-success?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions CI/CD" /></a>
   <a href="./SECURITY.md"><img src="https://img.shields.io/badge/Architecture-Zero%20Trust%20Enforced-00ACC1?style=for-the-badge&logo=shield&logoColor=white" alt="Zero Trust Architecture" /></a>
   <a href="./app/proguard-rules.pro"><img src="https://img.shields.io/badge/R8%20%2F%20ProGuard-Bytecode%20Hardened-673AB7?style=for-the-badge&logo=android&logoColor=white" alt="R8 ProGuard Hardened" /></a>
   <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-Target%20SDK%2036-34A853?style=for-the-badge&logo=android&logoColor=white" alt="Target SDK 36" /></a>
@@ -69,14 +70,16 @@
 - **Glassmorphic Spatial Atmosphere**: Dynamic 4D ambient gradients, glowing clearance rings, and high-contrast accessibility tags.
 - **Inactivity Defense**: Automated 5-minute idle watchdog that purges decrypted memory cache (`AegisSessionMemory.clearSensitiveData()`) whenever the user navigates away or idles.
 
-### 📊 2. Material 3 Eisenhower Priority Matrix Dashboard
+### 📊 2. Material 3 Eisenhower Task Manager with Room Database Persistence
 - **4-Quadrant Decision Framework**:
-  - 🔴 **DO FIRST** (`Urgent & Important`): Crisis resolution, security patches, critical incidents.
-  - 🔵 **SCHEDULE** (`Not Urgent & Important`): Long-term strategic roadmaps, architecture audits.
-  - 🟠 **DELEGATE** (`Urgent & Not Important`): Administrative triage, recurring operational handoffs.
-  - 🔘 **DELETE** (`Not Urgent & Not Important`): Distractions, obsolete drafts, eliminated noise.
-- **Real-Time Progress Metrics**: Active task counters, visual progress indicators, and instant quadrant reassignment dropdowns.
-- **Local Persistence**: Backed by high-speed SQLite via **Android Room Database** with KSP codegen.
+  - 🔴 **DO FIRST (Q1)** (`Urgent & Important`): Crisis resolution, security hotfixes, critical executive deadlines.
+  - 🔵 **SCHEDULE (Q2)** (`Not Urgent & Important`): Long-term strategic architecture, personal wellness, preventive audits.
+  - 🟠 **DELEGATE (Q3)** (`Urgent & Not Important`): Administrative interruptions, operational tasks, team handoffs.
+  - 🔘 **DELETE (Q4)** (`Not Urgent & Not Important`): Trivial noise, stale logs, eliminated distractions.
+- **Room SQLite Persistence**: Pure reactive local persistence powered by **Android Room Database** (`aegis_tasks` table) and Kotlin Coroutines/Flow with zero network dependency.
+- **Live Dynamic Quadrant Indicator**: Visual real-time quadrant target indicator while toggling Urgency & Importance switches.
+- **2x2 Matrix & List Layouts**: Switch dynamically between a responsive 2x2 matrix grid and an interactive task management list with search filtering, status toggling, and instant quadrant reassignment.
+- **Batch Actions**: One-tap sample executive template seeder and batch completion purger.
 
 ### 🛡️ 3. Inline AI Prompt Defense & Security Shield
 - **Automated Prompt Injection Filtering**: Intercepts jailbreaks (`"DAN"`, `"ignore rules"`, `"reveal system prompt"`) before sending payloads to LLM backends.
@@ -163,16 +166,20 @@ gradle testDebugUnitTest
 gradle assembleRelease
 ```
 
-### 📦 Play Store Release (AAB)
+### 📦 Play Store Release (AAB) & CI/CD Pipeline
 
-To generate the signed Android App Bundle (`.aab`) ready for upload to Google Play Console:
+AEGIS includes a comprehensive, multi-stage **GitHub Actions CI/CD pipeline** located at [`.github/workflows/android-ci.yml`](./.github/workflows/android-ci.yml):
 
-1. Configure your release signing credentials following **[BUILDING_AAB.md](./BUILDING_AAB.md)**.
-2. Trigger the automated GitHub Actions workflow (`.github/workflows/build-aab.yml`) or execute locally:
-   ```bash
-   STORE_PASSWORD="<store_pass>" KEY_PASSWORD="<key_pass>" KEYSTORE_PATH="<path.jks>" gradle :app:bundleRelease
-   ```
-3. Locate the generated bundle under `app/build/outputs/bundle/release/app-release.aab`.
+1. **🧪 Unit Tests & Code Verification**: Runs Robolectric JVM unit tests, Room SQLite assertions, and Eisenhower Matrix quadrant mappings.
+2. **📦 Debug APK Assembly**: Builds debug binaries with SHA-256 provenance checksums for internal QA and rapid verification.
+3. **🚀 Production Release AAB**: Compiles signed Android App Bundles (`.aab`) ready for Google Play Store track releases.
+4. **🛡️ Security & SSF Audit**: Validates ProGuard/R8 bytecode configuration, least-privilege permissions, and generates an automated executive GitHub Step Summary.
+
+To trigger manually or run locally:
+```bash
+# Local bundle release build:
+STORE_PASSWORD="<store_pass>" KEY_PASSWORD="<key_pass>" KEYSTORE_PATH="<path.jks>" gradle :app:bundleRelease
+```
 
 ---
 

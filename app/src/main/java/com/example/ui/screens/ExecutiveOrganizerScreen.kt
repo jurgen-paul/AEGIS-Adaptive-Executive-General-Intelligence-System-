@@ -101,6 +101,8 @@ fun ExecutiveOrganizerScreen(
     onUpdateStatus: (task: AegisTask, newStatus: String) -> Unit,
     onDeleteTask: (taskId: Long) -> Unit,
     onUpdatePriority: ((task: AegisTask, isUrgent: Boolean, isImportant: Boolean) -> Unit)? = null,
+    onClearCompleted: (() -> Unit)? = null,
+    onSeedTemplates: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -479,20 +481,22 @@ fun ExecutiveOrganizerScreen(
                 }
 
                 1 -> {
-                    // Eisenhower 4-Quadrant Priority Matrix View
+                    // Eisenhower 4-Quadrant Priority Matrix & Room Task Manager View
                     LazyColumn(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         item {
-                            EisenhowerMatrixComponent(
+                            com.example.ui.components.EisenhowerTaskManagerComponent(
                                 tasks = tasks,
                                 onAddTask = onAddTask,
                                 onUpdateStatus = onUpdateStatus,
                                 onUpdatePriority = { task, urgent, important ->
                                     onUpdatePriority?.invoke(task, urgent, important)
                                 },
-                                onDeleteTask = onDeleteTask
+                                onDeleteTask = onDeleteTask,
+                                onClearCompleted = onClearCompleted,
+                                onSeedTemplates = onSeedTemplates
                             )
                         }
                     }
