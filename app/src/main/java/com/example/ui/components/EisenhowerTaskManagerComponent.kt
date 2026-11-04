@@ -134,30 +134,41 @@ enum class MatrixQuadrant(
         accentColor = AegisWarningOrange,
         badgeLabel = "Q3: DELEGATE"
     ),
-    DELETE(
-        id = "delete",
-        title = "DELETE / ELIMINATE",
+    ELIMINATE(
+        id = "eliminate",
+        title = "ELIMINATE",
         subtitle = "Not Urgent & Not Important",
         actionText = "Drop or archive — distractions, stale logs, trivial tasks",
         isUrgent = false,
         isImportant = false,
         icon = Icons.Default.Delete,
         accentColor = Color(0xFF90A4AE),
-        badgeLabel = "Q4: DELETE"
+        badgeLabel = "Q4: ELIMINATE"
     );
 
     companion object {
+        val DELETE get() = ELIMINATE
+
         fun resolve(isUrgent: Boolean, isImportant: Boolean): MatrixQuadrant {
             return when {
                 isUrgent && isImportant -> DO
                 !isUrgent && isImportant -> SCHEDULE
                 isUrgent && !isImportant -> DELEGATE
-                else -> DELETE
+                else -> ELIMINATE
             }
         }
 
         fun fromTask(task: AegisTask): MatrixQuadrant {
             return resolve(task.isUrgent, task.isImportant)
+        }
+
+        fun fromEisenhowerTask(task: com.example.data.EisenhowerTask): MatrixQuadrant {
+            return when (task.quadrant) {
+                com.example.data.EisenhowerTask.QUADRANT_DO -> DO
+                com.example.data.EisenhowerTask.QUADRANT_SCHEDULE -> SCHEDULE
+                com.example.data.EisenhowerTask.QUADRANT_DELEGATE -> DELEGATE
+                else -> ELIMINATE
+            }
         }
     }
 }
@@ -362,11 +373,11 @@ fun EisenhowerTaskManagerComponent(
                     modifier = Modifier.weight(1f)
                 )
                 QuadrantSummaryPill(
-                    quadrant = MatrixQuadrant.DELETE,
+                    quadrant = MatrixQuadrant.ELIMINATE,
                     count = deleteTasks.size,
-                    isSelected = selectedQuadrantFilter == MatrixQuadrant.DELETE,
+                    isSelected = selectedQuadrantFilter == MatrixQuadrant.ELIMINATE,
                     onClick = {
-                        selectedQuadrantFilter = if (selectedQuadrantFilter == MatrixQuadrant.DELETE) null else MatrixQuadrant.DELETE
+                        selectedQuadrantFilter = if (selectedQuadrantFilter == MatrixQuadrant.ELIMINATE) null else MatrixQuadrant.ELIMINATE
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -533,7 +544,7 @@ fun EisenhowerTaskManagerComponent(
                             modifier = Modifier.weight(1f)
                         )
                         QuadrantMatrixCard(
-                            quadrant = MatrixQuadrant.DELETE,
+                            quadrant = MatrixQuadrant.ELIMINATE,
                             tasks = deleteTasks,
                             onUpdateStatus = onUpdateStatus,
                             onUpdatePriority = onUpdatePriority,

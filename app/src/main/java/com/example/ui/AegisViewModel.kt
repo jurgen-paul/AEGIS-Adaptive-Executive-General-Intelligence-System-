@@ -13,6 +13,8 @@ import com.example.data.ChatMessageEntity
 import com.example.data.ChatSessionEntity
 import com.example.data.TaskDomain
 import com.example.data.UserProfile
+import com.example.data.EisenhowerRepository
+import com.example.data.EisenhowerTask
 import com.example.router.AegisRouter
 import com.example.service.GeminiApiClient
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +34,9 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AegisDatabase.getDatabase(application)
     private val dao = db.aegisDao()
     private val repository = AegisChatRepository(dao)
+
+    private val eisenhowerDao = db.eisenhowerTaskDao()
+    val eisenhowerRepository = EisenhowerRepository(eisenhowerDao)
 
     private val aegisRouter = AegisRouter()
 
@@ -125,6 +130,12 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = emptyList()
     )
 
+    val eisenhowerTasks: StateFlow<List<EisenhowerTask>> = eisenhowerRepository.allTasks.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     val securityEvents: StateFlow<List<AegisSecurityEvent>> = repository.allSecurityEvents.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -150,7 +161,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     val activeTab: StateFlow<Int> = _activeTab.asStateFlow()
 
     init {
-        // Seed default initial tasks & logs if database is empty
+        // Seed default initial tasks in Room database if empty
         viewModelScope.launch(Dispatchers.IO) {
             val initialTasks = listOf(
                 AegisTask(
@@ -170,17 +181,67 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                     status = "in_progress"
                 ),
                 AegisTask(
-                    title = "Health & Wellness Check-in",
-                    description = "Hydration tracking and 8-hour sleep schedule target.",
-                    category = "health",
+                    title = "Vendor License Renewal Follow-Up",
+                    description = "Delegate procurement approval and cloud compute quota review to DevOps.",
+                    category = "sales",
+                    isUrgent = true,
+                    isImportant = false,
+                    status = "pending"
+                ),
+                AegisTask(
+                    title = "Purge Deprecated Development Cache Logs",
+                    description = "Eliminate stale test session logs and temporary export files.",
+                    category = "general",
                     isUrgent = false,
                     isImportant = false,
                     status = "pending"
                 )
             )
-            // Seed default tasks if empty
+
             if (repository.getTaskCount() == 0) {
                 initialTasks.forEach { repository.saveTask(it) }
+            }
+
+            if (eisenhowerRepository.getTaskCount() == 0) {
+                val defaultEisenhowerTasks = listOf(
+                    EisenhowerTask(
+                        title = "Security Audit & Key Rotation",
+                        description = "Immediate security patch deployment and keystore rotation.",
+                        quadrant = EisenhowerTask.QUADRANT_DO,
+                        isUrgent = true,
+                        isImportant = true,
+                        status = EisenhowerTask.STATUS_PENDING,
+                        category = "security"
+                    ),
+                    EisenhowerTask(
+                        title = "Executive Strategic Architecture Review",
+                        description = "Plan Q4 multi-agent router evolution and offline Room database syncing.",
+                        quadrant = EisenhowerTask.QUADRANT_SCHEDULE,
+                        isUrgent = false,
+                        isImportant = true,
+                        status = EisenhowerTask.STATUS_IN_PROGRESS,
+                        category = "executive"
+                    ),
+                    EisenhowerTask(
+                        title = "Vendor License Renewal Follow-Up",
+                        description = "Delegate procurement approval and cloud compute quota review to DevOps.",
+                        quadrant = EisenhowerTask.QUADRANT_DELEGATE,
+                        isUrgent = true,
+                        isImportant = false,
+                        status = EisenhowerTask.STATUS_PENDING,
+                        category = "sales"
+                    ),
+                    EisenhowerTask(
+                        title = "Purge Deprecated Development Cache Logs",
+                        description = "Eliminate stale test session logs and temporary export files.",
+                        quadrant = EisenhowerTask.QUADRANT_ELIMINATE,
+                        isUrgent = false,
+                        isImportant = false,
+                        status = EisenhowerTask.STATUS_COMPLETED,
+                        category = "general"
+                    )
+                )
+                eisenhowerRepository.insertTasks(defaultEisenhowerTasks)
             }
         }
     }
@@ -354,6 +415,18 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                 status = "pending"
             )
             repository.saveTask(task)
+
+            val eisenTask = EisenhowerTask(
+                title = title,
+                description = description,
+                quadrant = EisenhowerTask.resolveQuadrant(isUrgent, isImportant),
+                isUrgent = isUrgent,
+                isImportant = isImportant,
+                status = EisenhowerTask.STATUS_PENDING,
+                category = category
+            )
+            eisenhowerRepository.insertTask(eisenTask)
+
             _sessionMemory.value = _sessionMemory.value.copy(
                 organizerLastAction = "created",
                 taskStatus = "pending"
@@ -365,6 +438,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             val updated = task.copy(status = newStatus)
             repository.updateTask(updated)
+            eisenhowerRepository.updateTask(EisenhowerTask.fromAegisTask(updated))
             _sessionMemory.value = _sessionMemory.value.copy(
                 organizerLastAction = "updated",
                 taskStatus = newStatus
@@ -376,6 +450,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             val updated = task.copy(isUrgent = isUrgent, isImportant = isImportant)
             repository.updateTask(updated)
+            eisenhowerRepository.updateTask(EisenhowerTask.fromAegisTask(updated))
             _sessionMemory.value = _sessionMemory.value.copy(
                 organizerLastAction = "re-prioritized",
                 taskStatus = "updated"
@@ -386,6 +461,7 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteTask(taskId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteTask(taskId)
+            eisenhowerRepository.deleteTaskById(taskId)
             _sessionMemory.value = _sessionMemory.value.copy(organizerLastAction = "deleted")
         }
     }
@@ -393,7 +469,76 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
     fun clearCompletedTasks() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteCompletedTasks()
+            eisenhowerRepository.deleteCompletedTasks()
             _sessionMemory.value = _sessionMemory.value.copy(organizerLastAction = "cleared_completed")
+        }
+    }
+
+    // Direct EisenhowerTask Room Persistence Methods
+    fun addEisenhowerTask(title: String, description: String, quadrant: String, category: String = "general") {
+        viewModelScope.launch(Dispatchers.IO) {
+            val isUrgent = quadrant == EisenhowerTask.QUADRANT_DO || quadrant == EisenhowerTask.QUADRANT_DELEGATE
+            val isImportant = quadrant == EisenhowerTask.QUADRANT_DO || quadrant == EisenhowerTask.QUADRANT_SCHEDULE
+            val task = EisenhowerTask(
+                title = title,
+                description = description,
+                quadrant = quadrant,
+                isUrgent = isUrgent,
+                isImportant = isImportant,
+                status = EisenhowerTask.STATUS_PENDING,
+                category = category
+            )
+            eisenhowerRepository.insertTask(task)
+            repository.saveTask(task.toAegisTask())
+        }
+    }
+
+    fun updateEisenhowerTaskStatus(task: EisenhowerTask, newStatus: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updated = task.copy(status = newStatus)
+            eisenhowerRepository.updateTask(updated)
+            repository.updateTask(updated.toAegisTask())
+        }
+    }
+
+    fun updateEisenhowerTaskQuadrant(task: EisenhowerTask, newQuadrant: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val isUrgent = newQuadrant == EisenhowerTask.QUADRANT_DO || newQuadrant == EisenhowerTask.QUADRANT_DELEGATE
+            val isImportant = newQuadrant == EisenhowerTask.QUADRANT_DO || newQuadrant == EisenhowerTask.QUADRANT_SCHEDULE
+            val updated = task.copy(
+                quadrant = newQuadrant,
+                isUrgent = isUrgent,
+                isImportant = isImportant
+            )
+            eisenhowerRepository.updateTask(updated)
+            repository.updateTask(updated.toAegisTask())
+        }
+    }
+
+    fun updateEisenhowerTaskPriority(task: EisenhowerTask, isUrgent: Boolean, isImportant: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val quadrant = EisenhowerTask.resolveQuadrant(isUrgent, isImportant)
+            val updated = task.copy(
+                quadrant = quadrant,
+                isUrgent = isUrgent,
+                isImportant = isImportant
+            )
+            eisenhowerRepository.updateTask(updated)
+            repository.updateTask(updated.toAegisTask())
+        }
+    }
+
+    fun deleteEisenhowerTask(taskId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            eisenhowerRepository.deleteTaskById(taskId)
+            repository.deleteTask(taskId)
+        }
+    }
+
+    fun clearCompletedEisenhowerTasks() {
+        viewModelScope.launch(Dispatchers.IO) {
+            eisenhowerRepository.deleteCompletedTasks()
+            repository.deleteCompletedTasks()
         }
     }
 
@@ -433,7 +578,10 @@ class AegisViewModel(application: Application) : AndroidViewModel(application) {
                     status = "completed"
                 )
             )
-            templates.forEach { repository.saveTask(it) }
+            templates.forEach {
+                repository.saveTask(it)
+                eisenhowerRepository.insertTask(EisenhowerTask.fromAegisTask(it))
+            }
             _sessionMemory.value = _sessionMemory.value.copy(organizerLastAction = "seeded_templates")
         }
     }

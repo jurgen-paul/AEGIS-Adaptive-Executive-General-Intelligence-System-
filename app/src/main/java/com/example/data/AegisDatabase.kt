@@ -9,17 +9,19 @@ import androidx.room.RoomDatabase
     entities = [
         AegisSessionLog::class,
         AegisTask::class,
+        EisenhowerTask::class,
         AegisSecurityEvent::class,
         HealthHistoryDisclaimer::class,
         SalesNote::class,
         ChatSessionEntity::class,
         ChatMessageEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AegisDatabase : RoomDatabase() {
     abstract fun aegisDao(): AegisDao
+    abstract fun eisenhowerTaskDao(): EisenhowerTaskDao
 
     companion object {
         @Volatile

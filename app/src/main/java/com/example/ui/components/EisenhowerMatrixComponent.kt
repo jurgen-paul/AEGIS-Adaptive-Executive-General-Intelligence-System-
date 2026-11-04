@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AegisTask
+import com.example.data.EisenhowerTask
 
 enum class EisenhowerQuadrant(
     val title: String,
@@ -60,34 +61,81 @@ enum class EisenhowerQuadrant(
         icon = Icons.Default.Group,
         tag = "delegate"
     ),
-    DELETE(
-        title = "DELETE",
+    ELIMINATE(
+        title = "ELIMINATE",
         subtitle = "Not Urgent & Not Important",
         actionLabel = "Eliminate & Purge",
         isUrgent = false,
         isImportant = false,
         icon = Icons.Default.Delete,
-        tag = "delete"
+        tag = "eliminate"
     );
 
     // Backward compatibility getters
     companion object {
         val DO_FIRST get() = DO
-        val ROUTINE get() = DELETE
+        val ROUTINE get() = ELIMINATE
+        val DELETE get() = ELIMINATE
 
         fun fromTask(task: AegisTask): EisenhowerQuadrant {
             return when {
                 task.isUrgent && task.isImportant -> DO
                 !task.isUrgent && task.isImportant -> SCHEDULE
                 task.isUrgent && !task.isImportant -> DELEGATE
-                else -> DELETE
+                else -> ELIMINATE
+            }
+        }
+
+        fun fromEisenhowerTask(task: com.example.data.EisenhowerTask): EisenhowerQuadrant {
+            return when {
+                task.quadrant == com.example.data.EisenhowerTask.QUADRANT_DO || (task.isUrgent && task.isImportant) -> DO
+                task.quadrant == com.example.data.EisenhowerTask.QUADRANT_SCHEDULE || (!task.isUrgent && task.isImportant) -> SCHEDULE
+                task.quadrant == com.example.data.EisenhowerTask.QUADRANT_DELEGATE || (task.isUrgent && !task.isImportant) -> DELEGATE
+                else -> ELIMINATE
             }
         }
     }
 }
 
 /**
- * Material3 Dashboard Component that categorizes tasks into an Eisenhower Priority Matrix (Do, Schedule, Delegate, Delete).
+ * Overloaded Eisenhower Priority Matrix Component that directly accepts Room database entities
+ * (EisenhowerTask) to persist tasks into 'Do', 'Schedule', 'Delegate', and 'Eliminate' quadrants.
+ */
+@JvmName("EisenhowerMatrixComponentForEisenhowerTask")
+@Composable
+fun EisenhowerMatrixComponent(
+    eisenhowerTasks: List<EisenhowerTask>,
+    onAddTask: (title: String, desc: String, isUrgent: Boolean, isImportant: Boolean, category: String) -> Unit,
+    onUpdateStatus: (task: EisenhowerTask, newStatus: String) -> Unit,
+    onUpdatePriority: (task: EisenhowerTask, isUrgent: Boolean, isImportant: Boolean) -> Unit,
+    onDeleteTask: ((taskId: Long) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    val aegisTasks = remember(eisenhowerTasks) {
+        eisenhowerTasks.map { it.toAegisTask() }
+    }
+    EisenhowerMatrixComponent(
+        tasks = aegisTasks,
+        onAddTask = onAddTask,
+        onUpdateStatus = { task, status ->
+            val matching = eisenhowerTasks.find { it.id == task.id }
+            if (matching != null) {
+                onUpdateStatus(matching, status)
+            }
+        },
+        onUpdatePriority = { task, isUrgent, isImportant ->
+            val matching = eisenhowerTasks.find { it.id == task.id }
+            if (matching != null) {
+                onUpdatePriority(matching, isUrgent, isImportant)
+            }
+        },
+        onDeleteTask = onDeleteTask,
+        modifier = modifier
+    )
+}
+
+/**
+ * Material3 Dashboard Component that categorizes tasks into an Eisenhower Priority Matrix (Do, Schedule, Delegate, Eliminate).
  */
 @Composable
 fun EisenhowerMatrixComponent(
@@ -169,16 +217,46 @@ fun EisenhowerMatrixComponent(
                     }
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .clickable {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.DO
-                            showAddTaskDialog = true
-                        }
-                        .testTag("add_matrix_task_button")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Room Database Persistent Badge
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF4CAF50).copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Storage,
+                                contentDescription = "Room Database Active",
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Room DB: Persistent",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4CAF50)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable {
+                                initialQuadrantForNewTask = EisenhowerQuadrant.DO
+                                showAddTaskDialog = true
+                            }
+                            .testTag("add_matrix_task_button")
+                    ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -199,6 +277,7 @@ fun EisenhowerMatrixComponent(
                     }
                 }
             }
+        }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
@@ -229,7 +308,7 @@ fun EisenhowerMatrixComponent(
                         EisenhowerQuadrant.DO -> doTasks.size
                         EisenhowerQuadrant.SCHEDULE -> scheduleTasks.size
                         EisenhowerQuadrant.DELEGATE -> delegateTasks.size
-                        EisenhowerQuadrant.DELETE -> deleteTasks.size
+                        EisenhowerQuadrant.ELIMINATE -> deleteTasks.size
                     }
 
                     Surface(
@@ -295,7 +374,7 @@ fun EisenhowerMatrixComponent(
                     )
                 }
 
-                // Row 2: DELEGATE & DELETE
+                // Row 2: DELEGATE & ELIMINATE
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -318,15 +397,15 @@ fun EisenhowerMatrixComponent(
                     )
 
                     QuadrantGridCard(
-                        quadrant = EisenhowerQuadrant.DELETE,
+                        quadrant = EisenhowerQuadrant.ELIMINATE,
                         taskList = deleteTasks,
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DELETE,
+                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.ELIMINATE,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.DELETE) null else EisenhowerQuadrant.DELETE
+                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.ELIMINATE) null else EisenhowerQuadrant.ELIMINATE
                         },
                         onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.DELETE
+                            initialQuadrantForNewTask = EisenhowerQuadrant.ELIMINATE
                             showAddTaskDialog = true
                         },
                         onUpdateStatus = onUpdateStatus,
@@ -341,7 +420,7 @@ fun EisenhowerMatrixComponent(
                 EisenhowerQuadrant.DO -> doTasks
                 EisenhowerQuadrant.SCHEDULE -> scheduleTasks
                 EisenhowerQuadrant.DELEGATE -> delegateTasks
-                EisenhowerQuadrant.DELETE -> deleteTasks
+                EisenhowerQuadrant.ELIMINATE -> deleteTasks
                 null -> tasks
             }
 
@@ -855,6 +934,6 @@ private fun getQuadrantColor(quadrant: EisenhowerQuadrant): Color {
         EisenhowerQuadrant.DO -> Color(0xFFEF5350)       // Red / Crimson
         EisenhowerQuadrant.SCHEDULE -> Color(0xFF2196F3) // Strategic Blue
         EisenhowerQuadrant.DELEGATE -> Color(0xFFFF9800) // Executive Amber
-        EisenhowerQuadrant.DELETE -> Color(0xFF78909C)   // Slate Gray / Muted
+        EisenhowerQuadrant.ELIMINATE -> Color(0xFF78909C) // Slate Gray / Muted
     }
 }
