@@ -52,6 +52,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -193,8 +194,10 @@ fun EisenhowerTaskManagerComponent(
     var searchQuery by remember { mutableStateOf("") }
     var showCompletedOnly by remember { mutableStateOf<Boolean?>(null) } // null = all, true = completed, false = active
     var showCreateDialog by remember { mutableStateOf(false) }
+    var createInitialUrgent by remember { mutableStateOf(true) }
+    var createInitialImportant by remember { mutableStateOf(true) }
     var showConfirmClearDialog by remember { mutableStateOf(false) }
-    var isGridView by remember { mutableStateOf(false) }
+    var isGridView by remember { mutableStateOf(true) }
 
     // Categorized Tasks
     val doTasks = remember(tasks) { tasks.filter { it.isUrgent && it.isImportant } }
@@ -224,9 +227,9 @@ fun EisenhowerTaskManagerComponent(
         modifier = modifier
             .fillMaxWidth()
             .testTag("eisenhower_task_manager"),
-        colors = CardDefaults.cardColors(containerColor = AegisSurfaceDark),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, AegisCyanPrimary.copy(alpha = 0.4f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
@@ -303,8 +306,8 @@ fun EisenhowerTaskManagerComponent(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = AegisSurfaceVariant,
-                border = androidx.compose.foundation.BorderStroke(1.dp, AegisOutline.copy(alpha = 0.6f))
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(
@@ -316,7 +319,7 @@ fun EisenhowerTaskManagerComponent(
                             text = "Matrix Completion Progress",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = AegisTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "$completedCount / $totalCount completed (${(completionRatio * 100).toInt()}%)",
@@ -333,7 +336,7 @@ fun EisenhowerTaskManagerComponent(
                             .height(6.dp)
                             .clip(RoundedCornerShape(3.dp)),
                         color = AegisShieldGreen,
-                        trackColor = AegisSurfaceDark
+                        trackColor = MaterialTheme.colorScheme.surface
                     )
                 }
             }
@@ -416,17 +419,24 @@ fun EisenhowerTaskManagerComponent(
                         .testTag("eisenhower_search_input"),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AegisCyanPrimary,
-                        unfocusedBorderColor = AegisOutline,
-                        focusedTextColor = AegisTextPrimary,
-                        unfocusedTextColor = AegisTextPrimary
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
                 // Add Task Button
                 Button(
-                    onClick = { showCreateDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = AegisCyanPrimary, contentColor = Color.Black),
+                    onClick = {
+                        createInitialUrgent = true
+                        createInitialImportant = true
+                        showCreateDialog = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.testTag("eisenhower_new_task_btn")
                 ) {
@@ -507,52 +517,46 @@ fun EisenhowerTaskManagerComponent(
 
             // Main Content Area: Matrix 2x2 Grid or Detailed Filtered List
             if (isGridView) {
-                // 2x2 Quadrant Grid View
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        QuadrantMatrixCard(
-                            quadrant = MatrixQuadrant.DO,
-                            tasks = doTasks,
-                            onUpdateStatus = onUpdateStatus,
-                            onUpdatePriority = onUpdatePriority,
-                            onDeleteTask = onDeleteTask,
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuadrantMatrixCard(
-                            quadrant = MatrixQuadrant.SCHEDULE,
-                            tasks = scheduleTasks,
-                            onUpdateStatus = onUpdateStatus,
-                            onUpdatePriority = onUpdatePriority,
-                            onDeleteTask = onDeleteTask,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        QuadrantMatrixCard(
-                            quadrant = MatrixQuadrant.DELEGATE,
-                            tasks = delegateTasks,
-                            onUpdateStatus = onUpdateStatus,
-                            onUpdatePriority = onUpdatePriority,
-                            onDeleteTask = onDeleteTask,
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuadrantMatrixCard(
-                            quadrant = MatrixQuadrant.ELIMINATE,
-                            tasks = deleteTasks,
-                            onUpdateStatus = onUpdateStatus,
-                            onUpdatePriority = onUpdatePriority,
-                            onDeleteTask = onDeleteTask,
-                            modifier = Modifier.weight(1f)
-                        )
+                val mappedFilter = when (selectedQuadrantFilter) {
+                    MatrixQuadrant.DO -> EisenhowerQuadrant.DO
+                    MatrixQuadrant.SCHEDULE -> EisenhowerQuadrant.SCHEDULE
+                    MatrixQuadrant.DELEGATE -> EisenhowerQuadrant.DELEGATE
+                    MatrixQuadrant.ELIMINATE -> EisenhowerQuadrant.ELIMINATE
+                    null -> null
+                }
+                val gridTasks = remember(tasks, searchQuery) {
+                    if (searchQuery.isBlank()) tasks
+                    else tasks.filter {
+                        it.title.contains(searchQuery, ignoreCase = true) ||
+                            it.description.contains(searchQuery, ignoreCase = true)
                     }
                 }
+
+                ExecutivePriorityGridComponent(
+                    tasks = gridTasks,
+                    onMoveTask = { task, targetQuadrant ->
+                        onUpdatePriority(task, targetQuadrant.isUrgent, targetQuadrant.isImportant)
+                    },
+                    onToggleComplete = { task, completed ->
+                        onUpdateStatus(task, if (completed) "completed" else "pending")
+                    },
+                    onQuickAddToQuadrant = { quadrant ->
+                        createInitialUrgent = quadrant.isUrgent
+                        createInitialImportant = quadrant.isImportant
+                        showCreateDialog = true
+                    },
+                    onDeleteTask = onDeleteTask,
+                    selectedQuadrantFilter = mappedFilter,
+                    onSelectQuadrant = { quad ->
+                        selectedQuadrantFilter = when (quad) {
+                            EisenhowerQuadrant.DO -> MatrixQuadrant.DO
+                            EisenhowerQuadrant.SCHEDULE -> MatrixQuadrant.SCHEDULE
+                            EisenhowerQuadrant.DELEGATE -> MatrixQuadrant.DELEGATE
+                            EisenhowerQuadrant.ELIMINATE -> MatrixQuadrant.ELIMINATE
+                            null -> null
+                        }
+                    }
+                )
             } else {
                 // List View
                 if (displayTasks.isEmpty()) {
@@ -617,6 +621,8 @@ fun EisenhowerTaskManagerComponent(
     // Create Task Dialog
     if (showCreateDialog) {
         CreateTaskDialog(
+            initialUrgent = createInitialUrgent,
+            initialImportant = createInitialImportant,
             onDismiss = { showCreateDialog = false },
             onSave = { title, desc, urgent, important, category ->
                 onAddTask(title, desc, urgent, important, category)
@@ -644,12 +650,9 @@ fun EisenhowerTaskManagerComponent(
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmClearDialog = false }) {
-                    Text("Cancel", color = AegisTextSecondary)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            },
-            containerColor = AegisSurfaceDark,
-            titleContentColor = AegisTextPrimary,
-            textContentColor = AegisTextSecondary
+            }
         )
     }
 }
@@ -671,10 +674,10 @@ private fun QuadrantSummaryPill(
             .clickable(onClick = onClick)
             .testTag("eisenhower_quadrant_chip_${quadrant.id}"),
         shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) quadrant.accentColor.copy(alpha = 0.25f) else AegisSurfaceVariant,
+        color = if (isSelected) quadrant.accentColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isSelected) quadrant.accentColor else AegisOutline.copy(alpha = 0.5f)
+            if (isSelected) quadrant.accentColor else MaterialTheme.colorScheme.outlineVariant
         )
     ) {
         Column(
@@ -717,10 +720,10 @@ private fun EisenhowerTaskListItem(
             .fillMaxWidth()
             .testTag("task_item_${task.id}"),
         shape = RoundedCornerShape(10.dp),
-        color = if (isCompleted) AegisSurfaceVariant.copy(alpha = 0.4f) else AegisSurfaceVariant,
+        color = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isCompleted) AegisOutline.copy(alpha = 0.4f) else quadrant.accentColor.copy(alpha = 0.35f)
+            if (isCompleted) MaterialTheme.colorScheme.outlineVariant else quadrant.accentColor.copy(alpha = 0.35f)
         )
     ) {
         Row(
@@ -734,8 +737,8 @@ private fun EisenhowerTaskListItem(
                 },
                 colors = CheckboxDefaults.colors(
                     checkedColor = AegisShieldGreen,
-                    uncheckedColor = AegisOutline,
-                    checkmarkColor = Color.Black
+                    uncheckedColor = MaterialTheme.colorScheme.outline,
+                    checkmarkColor = Color.White
                 ),
                 modifier = Modifier.testTag("task_checkbox_${task.id}")
             )
@@ -748,7 +751,7 @@ private fun EisenhowerTaskListItem(
                         text = task.title,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isCompleted) AegisTextSecondary else AegisTextPrimary,
+                        color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                         textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -892,133 +895,6 @@ private fun EisenhowerTaskListItem(
     }
 }
 
-/**
- * Compact quadrant container in 2x2 grid view.
- */
-@Composable
-private fun QuadrantMatrixCard(
-    quadrant: MatrixQuadrant,
-    tasks: List<AegisTask>,
-    onUpdateStatus: (task: AegisTask, newStatus: String) -> Unit,
-    onUpdatePriority: (task: AegisTask, isUrgent: Boolean, isImportant: Boolean) -> Unit,
-    onDeleteTask: (taskId: Long) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        color = AegisSurfaceVariant,
-        border = androidx.compose.foundation.BorderStroke(1.dp, quadrant.accentColor.copy(alpha = 0.4f))
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            // Quadrant Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = quadrant.icon,
-                        contentDescription = null,
-                        tint = quadrant.accentColor,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = quadrant.title,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = quadrant.accentColor
-                    )
-                }
-                Surface(
-                    shape = CircleShape,
-                    color = quadrant.accentColor.copy(alpha = 0.2f),
-                    modifier = Modifier.size(20.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = tasks.size.toString(),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = quadrant.accentColor
-                        )
-                    }
-                }
-            }
-
-            Text(
-                text = quadrant.subtitle,
-                fontSize = 9.sp,
-                color = AegisTextSecondary
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (tasks.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No items in ${quadrant.badgeLabel}",
-                        fontSize = 10.sp,
-                        color = AegisTextSecondary.copy(alpha = 0.6f)
-                    )
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    tasks.take(4).forEach { task ->
-                        val isDone = task.status == "completed"
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = AegisSurfaceDark,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onUpdateStatus(task, if (isDone) "pending" else "completed")
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.FlashOn,
-                                    contentDescription = null,
-                                    tint = if (isDone) AegisShieldGreen else quadrant.accentColor,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = task.title,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (isDone) AegisTextSecondary else AegisTextPrimary,
-                                    textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-                    if (tasks.size > 4) {
-                        Text(
-                            text = "+${tasks.size - 4} more in Room",
-                            fontSize = 9.sp,
-                            color = AegisTextSecondary,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 /**
  * Modal dialog for creating and saving an Eisenhower task directly into Room.
@@ -1026,13 +902,15 @@ private fun QuadrantMatrixCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CreateTaskDialog(
+    initialUrgent: Boolean = true,
+    initialImportant: Boolean = true,
     onDismiss: () -> Unit,
     onSave: (title: String, desc: String, urgent: Boolean, important: Boolean, category: String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var isUrgent by remember { mutableStateOf(true) }
-    var isImportant by remember { mutableStateOf(true) }
+    var isUrgent by remember(initialUrgent) { mutableStateOf(initialUrgent) }
+    var isImportant by remember(initialImportant) { mutableStateOf(initialImportant) }
     var selectedCategory by remember { mutableStateOf("security") }
 
     val resolvedQuadrant = MatrixQuadrant.resolve(isUrgent, isImportant)
@@ -1185,7 +1063,10 @@ private fun CreateTaskDialog(
                     }
                 },
                 enabled = title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = AegisCyanPrimary, contentColor = Color.Black),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 modifier = Modifier.testTag("eisenhower_save_task_btn")
             ) {
                 Text("Save to Room DB", fontWeight = FontWeight.Bold)
@@ -1193,11 +1074,8 @@ private fun CreateTaskDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AegisTextSecondary)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        },
-        containerColor = AegisSurfaceDark,
-        titleContentColor = AegisTextPrimary,
-        textContentColor = AegisTextSecondary
+        }
     )
 }

@@ -9,7 +9,7 @@ AEGIS is a **Kotlin + Jetpack Compose (Material 3)** Android application structu
 │                         PRESENTATION LAYER (Compose M3)                 │
 │  MainActivity • AegisLockScreen • CommandHubScreen • SecurityShieldScreen│
 │  ExecutiveOrganizerScreen • SessionMemoryScreen                         │
-│  EisenhowerMatrixComponent • EisenhowerTaskManagerComponent              │
+│  ExecutivePriorityGridComponent • EisenhowerMatrixComponent • TaskMgr   │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │ StateFlow / Events
 ┌────────────────────────────────────▼────────────────────────────────────┐
@@ -37,7 +37,7 @@ AEGIS is a **Kotlin + Jetpack Compose (Material 3)** Android application structu
 | `com.example.router` | `AegisRouter` | Intent classification across Executive, Security, Health, Sales, and Conversation domains |
 | `com.example.service` | `PromptDefenseLayer`, `BiometricAuthManager`, `SecureExportManager`, `GeminiApiService`, `AegisSecurityHeaderInterceptor`, `GoogleSheetsIntegrationManager`, `VoiceSpeechManager` | Prompt injection firewall, biometric prompt, AES-256 export, HTTP headers, Google Sheets/Forms sync, speech recognition |
 | `com.example.ui` | `AegisViewModel` | Unidirectional state management via `StateFlow` and coroutine background dispatch (`Dispatchers.IO`) |
-| `com.example.ui.components` | `EisenhowerMatrixComponent`, `EisenhowerTaskManagerComponent`, `AegisLockScreen`, `GoogleSheetsFormComponent`, `AccountProfileSettingsComponent`, `SecurityAlertBanner`, `HealthDisclaimerBanner`, `ChatBubble`, `AegisTopAppBar` | Reusable Material 3 Compose UI modules |
+| `com.example.ui.components` | `ExecutivePriorityGridComponent`, `EisenhowerMatrixComponent`, `EisenhowerTaskManagerComponent`, `AegisLockScreen`, `GoogleSheetsFormComponent`, `AccountProfileSettingsComponent`, `SecurityAlertBanner`, `HealthDisclaimerBanner`, `ChatBubble`, `AegisTopAppBar` | Reusable Material 3 Compose UI modules |
 | `com.example.ui.screens` | `CommandHubScreen`, `ExecutiveOrganizerScreen`, `SecurityShieldScreen`, `SessionMemoryScreen` | Primary tab destinations |
 
 ---
@@ -72,6 +72,7 @@ Both `EisenhowerMatrixComponent` and `EisenhowerTaskManagerComponent` categorize
 
 AEGIS uses **local JVM unit tests & Robolectric** (no emulator required):
 
+- `ExecutivePriorityGridTest`: Robolectric Compose UI tests verifying 2x2 Urgency/Importance axes, Relocate Mode, and the Move Quadrant dialog.
 - `EisenhowerTaskTest`: Verifies quadrant resolution, urgency/importance mapping, and entity conversions.
 - `EisenhowerRoomRobolectricTest`: Tests in-memory Room `AegisDatabase` + `EisenhowerTaskDao` CRUD and quadrant queries.
 - `ExampleRobolectricTest`: Verifies string resources, valid decoding of `R.drawable.aegis_shield_bg`, and Compose rendering of `AegisLockScreen`.

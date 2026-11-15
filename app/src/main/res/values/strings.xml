@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">AEGIS</string>
+    <string name="status_page_url">https://ais-pre-jgv7ygll6w7fbeky7hzqri-771901666813.europe-west2.run.app/status.html</string>
+    <string name="klantsupport_page_url">https://ais-pre-jgv7ygll6w7fbeky7hzqri-771901666813.europe-west2.run.app/klantsupport.html</string>
+    <string name="support_email">oistarsentertainment@gmail.com</string>
+    <string name="status_page_title">AEGIS System Status</string>
+    <string name="klantsupport_page_title">AEGIS Klantsupport</string>
 </resources>

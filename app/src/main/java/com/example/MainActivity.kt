@@ -408,7 +408,8 @@ fun AegisMainApp(
                         onResetProfile = { viewModel.resetProfileToDefaults() },
                         onClearLogs = { viewModel.clearLogs() },
                         onExportLogs = handleExportChatHistory,
-                        exportStatusText = exportStatusMessage
+                        exportStatusText = exportStatusMessage,
+                        activeTaskCount = tasks.size
                     )
                 }
             }

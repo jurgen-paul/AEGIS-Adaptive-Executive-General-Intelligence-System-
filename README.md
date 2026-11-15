@@ -23,6 +23,8 @@
   <a href="./app/proguard-rules.pro"><img src="https://img.shields.io/badge/R8%20%2F%20ProGuard-Bytecode%20Hardened-673AB7?style=for-the-badge&logo=android&logoColor=white" alt="R8 ProGuard Hardened" /></a>
   <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-Target%20SDK%2036-34A853?style=for-the-badge&logo=android&logoColor=white" alt="Target SDK 36" /></a>
   <a href="./BUILDING_AAB.md"><img src="https://img.shields.io/badge/Release-Signed%20AAB%20Bundle-E91E63?style=for-the-badge&logo=googleplay&logoColor=white" alt="Release Signed AAB" /></a>
+  <a href="./docs/status.html"><img src="https://img.shields.io/badge/System%20Status-Operational-137333?style=for-the-badge&logo=statuspage&logoColor=white" alt="System Status Page" /></a>
+  <a href="./docs/klantsupport.html"><img src="https://img.shields.io/badge/Klantsupport-Service%20Desk-2554A6?style=for-the-badge&logo=zendesk&logoColor=white" alt="Klantsupport Page" /></a>
 </p>
 
 ---
@@ -194,6 +196,8 @@ STORE_PASSWORD="<store_pass>" KEY_PASSWORD="<key_pass>" KEYSTORE_PATH="<path.jks
 | **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | MVVM + Repository architecture, Room schema, and package map |
 | **[docs/SSF_DOCUMENTATION.md](./docs/SSF_DOCUMENTATION.md)** | NIST SSDF SP 800-218, OpenSSF, SLSA Level 3 & OWASP MASVS v2.0 controls |
 | **[SECURITY.md](./SECURITY.md)** | Vulnerability disclosure policy, SLAs, and runtime security posture |
+| **[docs/status.html](./docs/status.html)** | Public AEGIS System Status URL page (GitHub Pages &amp; in-app viewer) |
+| **[docs/klantsupport.html](./docs/klantsupport.html)** | Bilingual (NL/EN) Klantsupport URL page, FAQs &amp; direct email routing |
 | **[BUILDING_AAB.md](./BUILDING_AAB.md)** | Google Play App Bundle (`.aab`) signing and release workflow |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Contributor workflow, testing checklist, and DCO licensing terms |
 

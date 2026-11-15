@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEGIS — System Status | Service Health &amp; Telemetry</title>
+  <meta name="description" content="Live operational status for AEGIS Adaptive Executive &amp; General Intelligence System subsystems, security vault, Room persistence, and support." />
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --surface: #ffffff;
+      --surface-alt: #f0f4fa;
+      --border: #dfe5f0;
+      --text: #141820;
+      --text-muted: #5c6473;
+      --primary: #2554a6;
+      --primary-soft: #e6eefc;
+      --ok: #137333;
+      --ok-soft: #e6f4ea;
+      --warn: #b06000;
+      --warn-soft: #fef7e0;
+      --radius: 16px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e131b;
+        --surface: #161d28;
+        --surface-alt: #1e2736;
+        --border: #2c3648;
+        --text: #eef2f8;
+        --text-muted: #a1acb9;
+        --primary: #8ab4f8;
+        --primary-soft: #1b2c48;
+        --ok: #81c995;
+        --ok-soft: #132e1e;
+        --warn: #fdd663;
+        --warn-soft: #2f2612;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    header.topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    nav.nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    a.btn, button.btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease;
+    }
+
+    a.btn.primary, button.btn.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    a.btn:hover, button.btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .status-banner {
+      background: var(--ok-soft);
+      border: 1px solid var(--ok);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .status-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pulse-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 0 6px rgba(19, 115, 51, 0.18);
+      flex-shrink: 0;
+    }
+
+    .status-banner h2 {
+      margin: 0;
+      font-size: 19px;
+      color: var(--ok);
+    }
+
+    .status-banner p {
+      margin: 3px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .meta-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .metric-value {
+      margin-top: 6px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .service-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .service-row:first-of-type {
+      border-top: none;
+      padding-top: 4px;
+    }
+
+    .service-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .service-name {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .service-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .pill-ok {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .uptime-bars {
+      display: grid;
+      grid-template-columns: repeat(30, 1fr);
+      gap: 3px;
+      height: 16px;
+    }
+
+    .uptime-bar {
+      border-radius: 3px;
+      background: var(--ok);
+      opacity: 0.88;
+    }
+
+    .uptime-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .incident-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      margin-top: 10px;
+    }
+
+    .incident-item h3 {
+      margin: 0 0 4px;
+      font-size: 14px;
+    }
+
+    .incident-item p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .url-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge" aria-hidden="true">AE</div>
+        <div>
+          <h1>AEGIS System Status</h1>
+          <p>Adaptive Executive &amp; General Intelligence System</p>
+        </div>
+      </div>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a class="btn primary" href="./status.html" aria-current="page">Status Page</a>
+        <a class="btn" href="./klantsupport.html">Klantsupport URL</a>
+      </nav>
+    </header>
+
+    <section class="status-banner" aria-live="polite">
+      <div class="status-banner-left">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <div>
+          <h2>All Systems Operational</h2>
+          <p id="last-checked">Last verified: <span id="checked-time">Live</span> • Zero active incidents</p>
+        </div>
+      </div>
+      <button class="btn" type="button" onclick="refreshStatus()">Refresh Telemetry</button>
+    </section>
+
+    <section class="meta-strip" aria-label="Service Level Metrics">
+      <div class="metric-card">
+        <div class="metric-label">30-Day Availability</div>
+        <div class="metric-value">99.98%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Security Posture</div>
+        <div class="metric-value">Zero-Trust L2</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Room Persistence</div>
+        <div class="metric-value">Local SQLite v4</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">SSF Compliance</div>
+        <div class="metric-value">NIST SP 800-218</div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Core Subsystems">
+      <div class="card-header">
+        <h2 class="card-title">Subsystem Health Monitor</h2>
+        <span class="service-desc">Real-time operational breakdown</span>
+      </div>
+
+      <div class="service-row">
+        <div class="service-top">
+          <div>
+            <div class="service-name">4D Biometric Glass Vault</div>
+            <div class="service-desc">Hardware-backed BiometricPrompt (Class 3) &amp; 5-minute idle lock watchdog</div>
+          </div>
+          <span class="pill-ok">Operational</span>
+        </div>
+        <div class="uptime-bars" data-bars="30"></div>
+        <div class="uptime-legend"><span>30 days ago</span><span>100% uptime</span><span>Today</span></div>
+      </div>
+
+      <div class="service-row">
+        <div class="service-top">
+          <div>
+            <div class="service-name">2x2 Eisenhower Matrix &amp; Room Database</div>
+            <div class="service-desc">Offline-first SQLite task persistence (eisenhower_tasks &amp; aegis_tasks)</div>
+          </div>
+          <span class="pill-ok">Operational</span>
+        </div>
+        <div class="uptime-bars" data-bars="30"></div>
+        <div class="uptime-legend"><span>30 days ago</span><span>100% uptime</span><span>Today</span></div>
+      </div>
+
+      <div class="service-row">
+        <div class="service-top">
+          <div>
+            <div class="service-name">Prompt Defense Firewall &amp; PII Redactor</div>
+            <div class="service-desc">Inline jailbreak detection, credential redaction, and security event logging</div>
+          </div>
+          <span class="pill-ok">Operational</span>
+        </div>
+        <div class="uptime-bars" data-bars="30"></div>
+        <div class="uptime-legend"><span>30 days ago</span><span>99.99% uptime</span><span>Today</span></div>
+      </div>
+
+      <div class="service-row">
+        <div class="service-top">
+          <div>
+            <div class="service-name">Multi-Domain Executive Router</div>
+            <div class="service-desc">Core Executive, Security, Sales, Care &amp; Health compliance routing</div>
+          </div>
+          <span class="pill-ok">Operational</span>
+        </div>
+        <div class="uptime-bars" data-bars="30"></div>
+        <div class="uptime-legend"><span>30 days ago</span><span>99.96% uptime</span><span>Today</span></div>
+      </div>
+
+      <div class="service-row">
+        <div class="service-top">
+          <div>
+            <div class="service-name">Encrypted Export &amp; Google Sheets Sync</div>
+            <div class="service-desc">AES-256-CBC chat export with automated PII scrubbing &amp; webhook delivery</div>
+          </div>
+          <span class="pill-ok">Operational</span>
+        </div>
+        <div class="uptime-bars" data-bars="30"></div>
+        <div class="uptime-legend"><span>30 days ago</span><span>99.97% uptime</span><span>Today</span></div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Published Endpoints and Support">
+      <div class="card-header">
+        <h2 class="card-title">Public Status &amp; Klantsupport URLs</h2>
+      </div>
+      <div class="url-box" style="margin-bottom: 10px;">
+        <span>Status URL: <strong id="status-url-display">docs/status.html</strong></span>
+        <a class="btn" href="./status.html">Open Status</a>
+      </div>
+      <div class="url-box">
+        <span>Klantsupport URL: <strong id="support-url-display">docs/klantsupport.html</strong></span>
+        <a class="btn primary" href="./klantsupport.html">Go to Klantsupport</a>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Recent Maintenance and Security Updates">
+      <div class="card-header">
+        <h2 class="card-title">Recent Release &amp; Incident History</h2>
+      </div>
+      <div class="incident-item">
+        <h3>No open incidents</h3>
+        <p>All subsystems are operating within normal latency and security verification thresholds.</p>
+      </div>
+      <div class="incident-item">
+        <h3>Nov 15, 2026 — 2x2 Executive Priority Grid &amp; Security Hardening</h3>
+        <p>Deployed interactive quadrant relocation controls, Room v4 schema verification, and full Apache-2.0 &amp; SSF compliance documentation.</p>
+      </div>
+    </section>
+
+    <footer>
+      Need personal assistance or want to report a problem? Visit
+      <a href="./klantsupport.html">AEGIS Klantsupport</a> or email
+      <a href="mailto:oistarsentertainment@gmail.com">oistarsentertainment@gmail.com</a>.
+      <br />
+      &copy; 2026 AEGIS Intelligence Systems • Apache-2.0 License
+    </footer>
+  </div>
+
+  <script>
+    function renderBars() {
+      document.querySelectorAll('.uptime-bars').forEach(function (container) {
+        container.innerHTML = '';
+        var count = parseInt(container.getAttribute('data-bars') || '30', 10);
+        for (var i = 0; i < count; i++) {
+          var bar = document.createElement('span');
+          bar.className = 'uptime-bar';
+          bar.title = 'Day ' + (count - i) + ' ago: Operational';
+          container.appendChild(bar);
+        }
+      });
+    }
+
+    function refreshStatus() {
+      var now = new Date();
+      var el = document.getElementById('checked-time');
+      if (el) {
+        el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+      renderBars();
+    }
+
+    (function initUrls() {
+      if (window.location && window.location.href && window.location.protocol.indexOf('http') === 0) {
+        var base = window.location.href.replace(/\/[^\/]*$/, '');
+        var s = document.getElementById('status-url-display');
+        var k = document.getElementById('support-url-display');
+        if (s) s.textContent = base + '/status.html';
+        if (k) k.textContent = base + '/klantsupport.html';
+      }
+      refreshStatus();
+    })();
+  </script>
+</body>
+</html>

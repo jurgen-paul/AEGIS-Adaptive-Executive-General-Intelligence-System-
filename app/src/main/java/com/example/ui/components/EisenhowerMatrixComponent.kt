@@ -332,88 +332,23 @@ fun EisenhowerMatrixComponent(
                 }
             }
 
-            // Material3 Grid Layout (2x2 Matrix Quadrants)
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // Row 1: DO & SCHEDULE
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    QuadrantGridCard(
-                        quadrant = EisenhowerQuadrant.DO,
-                        taskList = doTasks,
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DO,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.DO) null else EisenhowerQuadrant.DO
-                        },
-                        onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.DO
-                            showAddTaskDialog = true
-                        },
-                        onUpdateStatus = onUpdateStatus,
-                        onUpdatePriority = onUpdatePriority,
-                        onDeleteTask = onDeleteTask
-                    )
-
-                    QuadrantGridCard(
-                        quadrant = EisenhowerQuadrant.SCHEDULE,
-                        taskList = scheduleTasks,
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.SCHEDULE,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.SCHEDULE) null else EisenhowerQuadrant.SCHEDULE
-                        },
-                        onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.SCHEDULE
-                            showAddTaskDialog = true
-                        },
-                        onUpdateStatus = onUpdateStatus,
-                        onUpdatePriority = onUpdatePriority,
-                        onDeleteTask = onDeleteTask
-                    )
-                }
-
-                // Row 2: DELEGATE & ELIMINATE
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    QuadrantGridCard(
-                        quadrant = EisenhowerQuadrant.DELEGATE,
-                        taskList = delegateTasks,
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.DELEGATE,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.DELEGATE) null else EisenhowerQuadrant.DELEGATE
-                        },
-                        onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.DELEGATE
-                            showAddTaskDialog = true
-                        },
-                        onUpdateStatus = onUpdateStatus,
-                        onUpdatePriority = onUpdatePriority,
-                        onDeleteTask = onDeleteTask
-                    )
-
-                    QuadrantGridCard(
-                        quadrant = EisenhowerQuadrant.ELIMINATE,
-                        taskList = deleteTasks,
-                        isSelected = selectedQuadrantFilter == EisenhowerQuadrant.ELIMINATE,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            selectedQuadrantFilter = if (selectedQuadrantFilter == EisenhowerQuadrant.ELIMINATE) null else EisenhowerQuadrant.ELIMINATE
-                        },
-                        onQuickAdd = {
-                            initialQuadrantForNewTask = EisenhowerQuadrant.ELIMINATE
-                            showAddTaskDialog = true
-                        },
-                        onUpdateStatus = onUpdateStatus,
-                        onUpdatePriority = onUpdatePriority,
-                        onDeleteTask = onDeleteTask
-                    )
-                }
-            }
+            // Interactive 2x2 Priority Matrix Grid (Urgency x Importance Axes)
+            ExecutivePriorityGridComponent(
+                tasks = tasks,
+                onMoveTask = { task, targetQuadrant ->
+                    onUpdatePriority(task, targetQuadrant.isUrgent, targetQuadrant.isImportant)
+                },
+                onToggleComplete = { task, completed ->
+                    onUpdateStatus(task, if (completed) "completed" else "pending")
+                },
+                onQuickAddToQuadrant = { quadrant ->
+                    initialQuadrantForNewTask = quadrant
+                    showAddTaskDialog = true
+                },
+                onDeleteTask = onDeleteTask,
+                selectedQuadrantFilter = selectedQuadrantFilter,
+                onSelectQuadrant = { selectedQuadrantFilter = it }
+            )
 
             // Expanded Quadrant Details / Selected View
             val displayTasks = when (selectedQuadrantFilter) {
@@ -504,155 +439,6 @@ fun EisenhowerMatrixComponent(
     }
 }
 
-@Composable
-private fun QuadrantGridCard(
-    quadrant: EisenhowerQuadrant,
-    taskList: List<AegisTask>,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    onQuickAdd: () -> Unit,
-    onUpdateStatus: (task: AegisTask, newStatus: String) -> Unit,
-    onUpdatePriority: (task: AegisTask, isUrgent: Boolean, isImportant: Boolean) -> Unit,
-    onDeleteTask: ((taskId: Long) -> Unit)?
-) {
-    val qColor = getQuadrantColor(quadrant)
-    val completedCount = taskList.count { it.status == "completed" }
-    val pendingCount = taskList.size - completedCount
-    val progress = if (taskList.isNotEmpty()) completedCount.toFloat() / taskList.size else 0f
-
-    Card(
-        modifier = modifier
-            .testTag("quadrant_${quadrant.tag}_card")
-            .clickable { onClick() }
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) qColor else qColor.copy(alpha = 0.35f),
-                shape = RoundedCornerShape(18.dp)
-            ),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) qColor.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            // Header: Icon, Title & Add Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(26.dp)
-                            .clip(CircleShape)
-                            .background(qColor.copy(alpha = 0.22f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = quadrant.icon,
-                            contentDescription = quadrant.title,
-                            tint = qColor,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-
-                    Text(
-                        text = quadrant.title,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = qColor
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(qColor)
-                        .clickable { onQuickAdd() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Quick Add to ${quadrant.title}",
-                        tint = Color.White,
-                        modifier = Modifier.size(15.dp)
-                    )
-                }
-            }
-
-            Text(
-                text = quadrant.subtitle,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Progress Indicator Bar
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = qColor,
-                trackColor = qColor.copy(alpha = 0.18f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "$pendingCount active / ${taskList.size} total",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                    text = quadrant.actionLabel,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = qColor
-                )
-            }
-
-            // List Preview inside Quadrant Card
-            if (taskList.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    taskList.take(3).forEach { task ->
-                        MatrixTaskItemRow(
-                            task = task,
-                            onUpdateStatus = onUpdateStatus,
-                            onUpdatePriority = onUpdatePriority,
-                            onDeleteTask = onDeleteTask
-                        )
-                    }
-                    if (taskList.size > 3) {
-                        Text(
-                            text = "+ ${taskList.size - 3} more",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = qColor,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun MatrixTaskItemRow(

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEGIS — Klantsupport &amp; Service Desk | Customer Support</title>
+  <meta name="description" content="Officiële klantsupportpagina voor AEGIS (com.aistudio.aegis.assistant). Directe ondersteuning, veelgestelde vragen, gegevensverwijdering en systeemstatus." />
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --surface: #ffffff;
+      --surface-alt: #f0f4fa;
+      --border: #dfe5f0;
+      --text: #141820;
+      --text-muted: #5c6473;
+      --primary: #2554a6;
+      --primary-soft: #e6eefc;
+      --ok: #137333;
+      --ok-soft: #e6f4ea;
+      --radius: 16px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e131b;
+        --surface: #161d28;
+        --surface-alt: #1e2736;
+        --border: #2c3648;
+        --text: #eef2f8;
+        --text-muted: #a1acb9;
+        --primary: #8ab4f8;
+        --primary-soft: #1b2c48;
+        --ok: #81c995;
+        --ok-soft: #132e1e;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    header.topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    nav.nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    a.btn, button.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    a.btn.primary, button.btn.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    a.btn:hover, button.btn:hover {
+      border-color: var(--primary);
+    }
+
+    .hero-card {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .hero-card h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      color: var(--primary);
+    }
+
+    .hero-card p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 560px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--ok-soft);
+      color: var(--ok);
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      border: 1px solid var(--ok);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card h2, .card h3 {
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    details.faq-item {
+      border-top: 1px solid var(--border);
+      padding: 12px 0;
+    }
+
+    details.faq-item:first-of-type {
+      border-top: none;
+      padding-top: 4px;
+    }
+
+    details.faq-item summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      list-style: none;
+    }
+
+    details.faq-item summary::before {
+      content: "+ ";
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    details.faq-item[open] summary::before {
+      content: "- ";
+    }
+
+    details.faq-item p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .toast {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--ok-soft);
+      color: var(--ok);
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge" aria-hidden="true">AE</div>
+        <div>
+          <h1 id="page-title">AEGIS Klantsupport</h1>
+          <p id="page-subtitle">Officieel supportportaal • com.aistudio.aegis.assistant</p>
+        </div>
+      </div>
+      <nav class="nav-links" aria-label="Navigation">
+        <button class="btn" type="button" id="lang-toggle" onclick="toggleLanguage()">EN / NL</button>
+        <a class="btn" href="./status.html" id="nav-status">Status Page</a>
+        <a class="btn primary" href="./klantsupport.html" aria-current="page" id="nav-support">Klantsupport</a>
+      </nav>
+    </header>
+
+    <section class="hero-card">
+      <div>
+        <h2 id="hero-heading">Hulp nodig bij AEGIS? Wij helpen u direct.</h2>
+        <p id="hero-desc">
+          Neem contact op met ons supportteam voor vragen over biometrische kluisbeveiliging, de 2x2 Eisenhower-prioriteitenmatrix, gegevensbeheer of privacy.
+        </p>
+      </div>
+      <a class="status-chip" href="./status.html">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="status-badge-text">Alle systemen operationeel</span>
+      </a>
+    </section>
+
+    <section class="grid-2">
+      <div class="card" style="margin-bottom: 0;">
+        <h3 id="contact-title">Direct Contact</h3>
+        <p id="contact-desc" style="font-size: 13px; color: var(--text-muted);">
+          Bereik ons rechtstreeks per e-mail. Standaard reactietijd op werkdagen is binnen 24 uur; beveiligingsmeldingen binnen 12 uur.
+        </p>
+        <p style="font-size: 13px; font-weight: 700;">
+          E-mail: <a href="mailto:oistarsentertainment@gmail.com" style="color: var(--primary);">oistarsentertainment@gmail.com</a>
+        </p>
+        <a class="btn primary" href="mailto:oistarsentertainment@gmail.com?subject=AEGIS%20Klantsupport%20Aanvraag" id="direct-mail-btn">
+          Mail Klantsupport
+        </a>
+      </div>
+
+      <div class="card" style="margin-bottom: 0;">
+        <h3 id="sla-title">Servicebelofte &amp; Privacy</h3>
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-muted);">
+          <li id="sla-1">Algemene klantsupport: &lt; 24 uur reactie</li>
+          <li id="sla-2">Beveiliging &amp; kwetsbaarheden: &lt; 12 uur triage</li>
+          <li id="sla-3">Volledig lokale opslag via Room SQLite (geen cloud-tracking)</li>
+          <li id="sla-4">Live statuscontrole via <a href="./status.html" style="color: var(--primary);">status.html</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 id="form-heading" style="font-size: 17px;">Supportaanvraag Voorbereiden</h2>
+      <p id="form-sub" style="font-size: 13px; color: var(--text-muted); margin-top: -6px;">
+        Stel hier uw supportbericht samen en verstuur het direct via uw eigen e-mailapp of kopieer de gestructureerde melding.
+      </p>
+
+      <label for="topic-select" id="lbl-topic">Onderwerp / Topic</label>
+      <select id="topic-select">
+        <option value="Algemene Klantsupport">Algemene Klantsupport / General Help</option>
+        <option value="Biometrische Kluis & Toegang">Biometrische Kluis &amp; Toegang / Biometrics</option>
+        <option value="Eisenhower Matrix & Taken">Eisenhower 2x2 Matrix &amp; Taken / Tasks</option>
+        <option value="Bugmelding">Bugmelding / Defect Report</option>
+        <option value="Privacy & Gegevensverwijdering">Privacy &amp; Gegevensverwijdering / Data Deletion</option>
+        <option value="Beveiligingsmelding">Beveiligingsmelding / Security Advisory</option>
+      </select>
+
+      <label for="user-email" id="lbl-email">Uw e-mailadres (optioneel)</label>
+      <input type="email" id="user-email" placeholder="naam@voorbeeld.nl" />
+
+      <label for="support-message" id="lbl-msg">Omschrijving van uw vraag of probleem</label>
+      <textarea id="support-message" rows="4" placeholder="Beschrijf wat er gebeurt, welke Android-versie u gebruikt en eventuele foutmeldingen..."></textarea>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <button class="btn primary" type="button" onclick="openMailtoSupport()" id="btn-send-mail">Verstuur via E-mail</button>
+        <button class="btn" type="button" onclick="copyTicket()" id="btn-copy-ticket">Kopieer Supporttekst</button>
+      </div>
+      <div class="toast" id="copy-toast">Supportbericht gekopieerd naar klembord.</div>
+    </section>
+
+    <section class="card">
+      <h2 id="faq-heading" style="font-size: 17px;">Veelgestelde Vragen (FAQ)</h2>
+
+      <details class="faq-item" open>
+        <summary id="faq-q1">Hoe verplaats ik taken tussen kwadranten in de 2x2 Eisenhower-matrix?</summary>
+        <p id="faq-a1">
+          Tik op het wissel-icoon op een taakkaart om de verplaatsingsmodus te activeren en tik daarna op het gewenste doelkwadrant (DO, SCHEDULE, DELEGATE of ELIMINATE). U kunt ook direct op een taakkaart tikken om het visuele 2x2 keuzemenu te openen. Alle wijzigingen worden direct opgeslagen in de lokale Room-database.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary id="faq-q2">Waarom vergrendelt de app automatisch na 5 minuten inactiviteit?</summary>
+        <p id="faq-a2">
+          AEGIS volgt een zero-trust beveiligingsmodel. Na 5 minuten inactiviteit wist de 4D Biometric Vault gevoelig sessiegeheugen en vereist opnieuw vingerafdruk-, gezichts- of PIN-verificatie.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary id="faq-q3">Hoe kan ik mijn lokale gegevens en taken verwijderen?</summary>
+        <p id="faq-a3">
+          Ga naar het tabblad <strong>Config</strong> (Session Memory) om voltooide taken, sessielogs of beveiligingsgebeurtenissen te wissen, of verwijder de app-opslag via Android Instellingen. Voor extra ondersteuning kunt u een verwijderingsverzoek sturen naar <a href="mailto:oistarsentertainment@gmail.com" style="color: var(--primary);">oistarsentertainment@gmail.com</a>.
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary id="faq-q4">Wordt gevoelige informatie geëxporteerd in logs?</summary>
+        <p id="faq-a4">
+          Nee. De ingebouwde SecureExportManager verwijdert en maskeert PII (zoals e-mailadressen en telefoonnummers) en versleutelt chatgeschiedenis met AES-256-CBC voordat bestanden lokaal worden opgeslagen.
+        </p>
+      </details>
+    </section>
+
+    <footer>
+      Systeemstatus controleren? Bekijk <a href="./status.html">AEGIS System Status</a> • Support e-mail:
+      <a href="mailto:oistarsentertainment@gmail.com">oistarsentertainment@gmail.com</a>
+      <br />
+      &copy; 2026 AEGIS Intelligence Systems • Apache-2.0 License
+    </footer>
+  </div>
+
+  <script>
+    var currentLang = 'nl';
+
+    var translations = {
+      nl: {
+        pageTitle: 'AEGIS Klantsupport',
+        pageSubtitle: 'Officieel supportportaal • com.aistudio.aegis.assistant',
+        heroHeading: 'Hulp nodig bij AEGIS? Wij helpen u direct.',
+        heroDesc: 'Neem contact op met ons supportteam voor vragen over biometrische kluisbeveiliging, de 2x2 Eisenhower-prioriteitenmatrix, gegevensbeheer of privacy.',
+        statusBadge: 'Alle systemen operationeel',
+        contactTitle: 'Direct Contact',
+        contactDesc: 'Bereik ons rechtstreeks per e-mail. Standaard reactietijd op werkdagen is binnen 24 uur; beveiligingsmeldingen binnen 12 uur.',
+        directMail: 'Mail Klantsupport',
+        slaTitle: 'Servicebelofte & Privacy',
+        sla1: 'Algemene klantsupport: < 24 uur reactie',
+        sla2: 'Beveiliging & kwetsbaarheden: < 12 uur triage',
+        sla3: 'Volledig lokale opslag via Room SQLite (geen cloud-tracking)',
+        formHeading: 'Supportaanvraag Voorbereiden',
+        formSub: 'Stel hier uw supportbericht samen en verstuur het direct via uw eigen e-mailapp of kopieer de gestructureerde melding.',
+        lblTopic: 'Onderwerp / Topic',
+        lblEmail: 'Uw e-mailadres (optioneel)',
+        lblMsg: 'Omschrijving van uw vraag of probleem',
+        btnSend: 'Verstuur via E-mail',
+        btnCopy: 'Kopieer Supporttekst',
+        faqHeading: 'Veelgestelde Vragen (FAQ)',
+        faqQ1: 'Hoe verplaats ik taken tussen kwadranten in de 2x2 Eisenhower-matrix?',
+        faqA1: 'Tik op het wissel-icoon op een taakkaart om de verplaatsingsmodus te activeren en tik daarna op het gewenste doelkwadrant (DO, SCHEDULE, DELEGATE of ELIMINATE). U kunt ook direct op een taakkaart tikken om het visuele 2x2 keuzemenu te openen.',
+        faqQ2: 'Waarom vergrendelt de app automatisch na 5 minuten inactiviteit?',
+        faqA2: 'AEGIS volgt een zero-trust beveiligingsmodel. Na 5 minuten inactiviteit wist de 4D Biometric Vault gevoelig sessiegeheugen en vereist opnieuw biometrische of PIN-verificatie.',
+        copied: 'Supportbericht gekopieerd naar klembord.'
+      },
+      en: {
+        pageTitle: 'AEGIS Customer Support',
+        pageSubtitle: 'Official Support Portal • com.aistudio.aegis.assistant',
+        heroHeading: 'Need help with AEGIS? We are here to help.',
+        heroDesc: 'Contact our support desk for help with the 4D Biometric Vault, the 2x2 Eisenhower Priority Matrix, local data management, or privacy inquiries.',
+        statusBadge: 'All Systems Operational',
+        contactTitle: 'Direct Contact',
+        contactDesc: 'Reach us directly via email. Standard business-day response time is under 24 hours; security advisories are triaged within 12 hours.',
+        directMail: 'Email Klantsupport',
+        slaTitle: 'Service Levels & Privacy',
+        sla1: 'General support response: < 24 hours',
+        sla2: 'Security disclosure triage: < 12 hours',
+        sla3: 'Local-first storage via Room SQLite (no ad tracking)',
+        formHeading: 'Prepare Support Request',
+        formSub: 'Compose a structured support message below and open it in your mail client or copy it to the clipboard.',
+        lblTopic: 'Topic',
+        lblEmail: 'Your email address (optional)',
+        lblMsg: 'Describe your question or issue',
+        btnSend: 'Send via Email',
+        btnCopy: 'Copy Support Summary',
+        faqHeading: 'Frequently Asked Questions (FAQ)',
+        faqQ1: 'How do I move tasks between quadrants in the 2x2 Eisenhower Matrix?',
+        faqA1: 'Tap the swap icon on any task card to activate Relocate Mode and tap a destination quadrant (DO, SCHEDULE, DELEGATE, or ELIMINATE), or tap a task card directly to open the visual 2x2 routing dialog.',
+        faqQ2: 'Why does the app lock automatically after 5 minutes of inactivity?',
+        faqA2: 'AEGIS enforces zero-trust memory hygiene. After 5 minutes idle, the 4D Biometric Vault clears sensitive session context and requires biometric or device PIN verification.',
+        copied: 'Support summary copied to clipboard.'
+      }
+    };
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'nl' ? 'en' : 'nl';
+      var t = translations[currentLang];
+      document.documentElement.lang = currentLang;
+      document.getElementById('page-title').textContent = t.pageTitle;
+      document.getElementById('page-subtitle').textContent = t.pageSubtitle;
+      document.getElementById('hero-heading').textContent = t.heroHeading;
+      document.getElementById('hero-desc').textContent = t.heroDesc;
+      document.getElementById('status-badge-text').textContent = t.statusBadge;
+      document.getElementById('contact-title').textContent = t.contactTitle;
+      document.getElementById('contact-desc').textContent = t.contactDesc;
+      document.getElementById('direct-mail-btn').textContent = t.directMail;
+      document.getElementById('sla-title').textContent = t.slaTitle;
+      document.getElementById('sla-1').textContent = t.sla1;
+      document.getElementById('sla-2').textContent = t.sla2;
+      document.getElementById('sla-3').textContent = t.sla3;
+      document.getElementById('form-heading').textContent = t.formHeading;
+      document.getElementById('form-sub').textContent = t.formSub;
+      document.getElementById('lbl-topic').textContent = t.lblTopic;
+      document.getElementById('lbl-email').textContent = t.lblEmail;
+      document.getElementById('lbl-msg').textContent = t.lblMsg;
+      document.getElementById('btn-send-mail').textContent = t.btnSend;
+      document.getElementById('btn-copy-ticket').textContent = t.btnCopy;
+      document.getElementById('faq-heading').textContent = t.faqHeading;
+      document.getElementById('faq-q1').textContent = t.faqQ1;
+      document.getElementById('faq-a1').textContent = t.faqA1;
+      document.getElementById('faq-q2').textContent = t.faqQ2;
+      document.getElementById('faq-a2').textContent = t.faqA2;
+      document.getElementById('copy-toast').textContent = t.copied;
+    }
+
+    function buildTicketText() {
+      var topic = document.getElementById('topic-select').value;
+      var email = document.getElementById('user-email').value || '(not provided)';
+      var message = document.getElementById('support-message').value || '(empty)';
+      return 'App: AEGIS (com.aistudio.aegis.assistant)\n' +
+        'Topic: ' + topic + '\n' +
+        'Reply-To: ' + email + '\n' +
+        'Message:\n' + message;
+    }
+
+    function openMailtoSupport() {
+      var topic = document.getElementById('topic-select').value;
+      var subject = encodeURIComponent('[AEGIS Klantsupport] ' + topic);
+      var body = encodeURIComponent(buildTicketText());
+      window.location.href = 'mailto:oistarsentertainment@gmail.com?subject=' + subject + '&body=' + body;
+    }
+
+    function copyTicket() {
+      var text = buildTicketText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      var toast = document.getElementById('copy-toast');
+      toast.style.display = 'block';
+      setTimeout(function () {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

@@ -50,6 +50,7 @@ import com.example.data.AegisSessionMemory
 import com.example.data.UserProfile
 import com.example.ui.AegisThemeMode
 import com.example.ui.components.AccountProfileSettingsComponent
+import com.example.ui.components.StatusAndKlantsupportComponent
 import com.example.ui.theme.AegisCyanPrimary
 import com.example.ui.theme.AegisOutline
 import com.example.ui.theme.AegisShieldGreen
@@ -79,6 +80,7 @@ fun SessionMemoryScreen(
     onClearLogs: () -> Unit,
     onExportLogs: (() -> Unit)? = null,
     exportStatusText: String? = null,
+    activeTaskCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -107,6 +109,14 @@ fun SessionMemoryScreen(
                 onClearLogs = onClearLogs,
                 onExportLogs = onExportLogs,
                 exportStatusText = exportStatusText
+            )
+        }
+
+        // Public Status & Klantsupport URL Portal Card
+        item {
+            StatusAndKlantsupportComponent(
+                securityMode = sessionMemory.securityMode,
+                activeTaskCount = activeTaskCount
             )
         }
 
