@@ -17,6 +17,7 @@
 </p>
 
 <p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge&logo=apache&logoColor=white" alt="Apache License 2.0" /></a>
   <a href="./.github/workflows/android-ci.yml"><img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions%20Passing-success?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions CI/CD" /></a>
   <a href="./SECURITY.md"><img src="https://img.shields.io/badge/Architecture-Zero%20Trust%20Enforced-00ACC1?style=for-the-badge&logo=shield&logoColor=white" alt="Zero Trust Architecture" /></a>
   <a href="./app/proguard-rules.pro"><img src="https://img.shields.io/badge/R8%20%2F%20ProGuard-Bytecode%20Hardened-673AB7?style=for-the-badge&logo=android&logoColor=white" alt="R8 ProGuard Hardened" /></a>
@@ -142,12 +143,12 @@ Production release builds enforce aggressive code minification, dead code elimin
 └────────────────────────────────────────────────────────┘
 ```
 
-- **Core**: Kotlin 1.9+, Java 11 bytecode compatibility
-- **UI Architecture**: Jetpack Compose, Material 3 Design System, Edge-to-Edge WindowInsets
-- **Persistence**: Android Room (`2.6.1`) with KSP compiler
-- **Security**: `androidx.biometric:biometric:1.2.0-alpha05`, Android Keystore StrongBox
-- **Networking**: Retrofit 2.9, OkHttp 4.12, Moshi 1.15
-- **Quality Assurance**: Robolectric local JVM testing, Roborazzi screenshot verification
+- **Core**: Kotlin `2.2.10`, Java 11 bytecode compatibility, AGP `9.1.1`
+- **UI Architecture**: Jetpack Compose (BOM `2024.09.00`), Material 3 Design System, Edge-to-Edge `WindowInsets`
+- **Persistence**: Android Room (`2.7.0`) with KSP (`2.3.5`) (`aegis_tasks`, `eisenhower_tasks`, `aegis_security_events`)
+- **Security**: `androidx.biometric:biometric:1.1.0`, Android KeyStore, AES-256-CBC `SecureExportManager`
+- **Networking & AI**: Retrofit `2.12.0`, OkHttp `4.10.0`, Moshi `1.15.2`, Firebase BOM `34.15.0` (AI Logic & App Check)
+- **Quality Assurance**: Robolectric `4.16.1` local JVM testing, Roborazzi `1.59.0` screenshot verification
 
 ---
 
@@ -183,8 +184,17 @@ STORE_PASSWORD="<store_pass>" KEY_PASSWORD="<key_pass>" KEYSTORE_PATH="<path.jks
 
 ---
 
-## 📄 License & Security Disclosures
+## 📚 Documentation & Open-Source Licenses
 
-- **Security Advisories**: Review our [Vulnerability Disclosure Policy](./SECURITY.md).
-- **Compliance Documentation**: Review our [SSF Architecture Guide](./docs/SSF_DOCUMENTATION.md).
-- **Copyright**: © 2026 AEGIS Intelligence Systems. All rights reserved.
+| Document | Purpose |
+|:---|:---|
+| **[LICENSE](./LICENSE)** | Apache License 2.0 governing AEGIS source code and distribution |
+| **[NOTICE](./NOTICE)** | Copyright & upstream open-source attribution notices |
+| **[docs/THIRD_PARTY_LICENSES.md](./docs/THIRD_PARTY_LICENSES.md)** | Full SPDX license & dependency SBOM inventory |
+| **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | MVVM + Repository architecture, Room schema, and package map |
+| **[docs/SSF_DOCUMENTATION.md](./docs/SSF_DOCUMENTATION.md)** | NIST SSDF SP 800-218, OpenSSF, SLSA Level 3 & OWASP MASVS v2.0 controls |
+| **[SECURITY.md](./SECURITY.md)** | Vulnerability disclosure policy, SLAs, and runtime security posture |
+| **[BUILDING_AAB.md](./BUILDING_AAB.md)** | Google Play App Bundle (`.aab`) signing and release workflow |
+| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Contributor workflow, testing checklist, and DCO licensing terms |
+
+- **Copyright**: © 2026 AEGIS Intelligence Systems. Licensed under the [Apache License, Version 2.0](./LICENSE).

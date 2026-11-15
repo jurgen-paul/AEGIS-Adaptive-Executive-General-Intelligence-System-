@@ -1,0 +1,22 @@
+AEGIS — Adaptive Executive & General Intelligence System
+Copyright 2026 AEGIS Intelligence Systems
+
+This product includes software developed by AEGIS Intelligence Systems
+and third-party open-source components governed by their respective licenses.
+See docs/THIRD_PARTY_LICENSES.md for the full dependency and SPDX inventory.
+
+Major Upstream Acknowledgements:
+- Android Jetpack (Compose, Room, Biometric, Lifecycle, Activity, Core KTX)
+  Copyright The Android Open Source Project (Apache License 2.0)
+- Kotlin Standard Library & Kotlinx Coroutines
+  Copyright JetBrains s.r.o. and Kotlin Programming Language contributors (Apache License 2.0)
+- Firebase Android SDK (AI Logic, App Check)
+  Copyright Google LLC (Apache License 2.0)
+- Square Retrofit, OkHttp, Okio, and Moshi
+  Copyright Square, Inc. (Apache License 2.0)
+- Coil Image Loading Library
+  Copyright Coil Contributors (Apache License 2.0)
+- Robolectric & Roborazzi Testing Frameworks
+  Copyright Robolectric / Takahiro Menju (MIT / Apache License 2.0)
+- JUnit 4 Testing Framework
+  Copyright JUnit Contributors (Eclipse Public License 1.0)
